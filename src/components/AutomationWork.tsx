@@ -461,19 +461,6 @@ export default function AutomationWork() {
             />
           ))
         )}
-
-        {/* Upcoming Project Card */}
-        <div className="border border-dashed border-[#E5E5E5] flex flex-col items-center justify-center gap-3 p-10 text-center min-h-[260px]">
-          <div className="w-10 h-10 border border-[#E5E5E5] flex items-center justify-center">
-            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
-              <path d="M8 3v10M3 8h10" stroke="#CCCCCC" strokeWidth="1.5" strokeLinecap="round"/>
-            </svg>
-          </div>
-          <p className="text-sm font-semibold text-[#AAAAAA]">More projects coming</p>
-          <p className="text-xs text-[#CCCCCC] leading-relaxed">
-            Additional case studies will appear here as they are published via the CMS.
-          </p>
-        </div>
       </div>
 
       {/* Detail modal */}
