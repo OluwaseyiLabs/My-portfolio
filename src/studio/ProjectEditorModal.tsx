@@ -31,7 +31,9 @@ export default function ProjectEditorModal({
   onSaved,
 }: ProjectEditorModalProps) {
   const isEditing = Boolean(initialProject?.id)
-  const category = initialProject?.category || initialCategory
+  const [category, setCategory] = useState<ProjectCategory>(
+    initialProject?.category || initialCategory
+  )
   const isAI = category === 'AI_AUTOMATION'
 
   // Form states
@@ -305,6 +307,35 @@ export default function ProjectEditorModal({
                 {submitError}
               </div>
             )}
+
+            {/* Category Selector Dropdown */}
+            <div className="border border-[#E5E5E5] bg-[#FBFBFB] p-4">
+              <label className="block text-xs font-bold uppercase tracking-[0.12em] text-black mb-1">
+                Project Category Sector *
+              </label>
+              <p className="text-[11px] text-[#666666] mb-3 leading-relaxed">
+                Choose the sector where this project belongs. Switching categories dynamically updates the form fields and saves the project directly into that sector on the public portfolio.
+              </p>
+              <div className="relative">
+                <select
+                  value={category}
+                  onChange={(e) => setCategory(e.target.value as ProjectCategory)}
+                  className="w-full border border-[#D5D5D5] focus:border-black px-4 py-2.5 text-sm font-bold bg-white outline-none cursor-pointer appearance-none transition-colors"
+                >
+                  <option value="AI_AUTOMATION">
+                    AI Automation Sector (Workflows, AI Agents, n8n Systems)
+                  </option>
+                  <option value="WEB_DEVELOPMENT">
+                    Web Design &amp; Development Sector (Websites, Apps, E-commerce)
+                  </option>
+                </select>
+                <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3.5 text-black">
+                  <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+                    <path d="M3 5l4 4 4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+                </div>
+              </div>
+            </div>
 
             {/* 1. Name & Slug */}
             <div className="grid sm:grid-cols-2 gap-4">
