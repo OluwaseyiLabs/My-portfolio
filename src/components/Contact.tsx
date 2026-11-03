@@ -28,9 +28,32 @@ export default function Contact() {
     }
     setErrors({})
     setStatus('submitting')
-    // Placeholder: no backend is connected. Replace with a real form handler (e.g. Formspree, Resend, or a custom endpoint).
-    await new Promise((res) => setTimeout(res, 1200))
-    setStatus('success')
+
+    try {
+      const response = await fetch('https://ucy00zep.rpcld.net/webhook-test/portfolio-request', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name: formData.name.trim(),
+          email: formData.email.trim(),
+          message: formData.message.trim(),
+          submittedAt: new Date().toISOString(),
+          source: 'portfolio_contact_form',
+        }),
+      })
+
+      if (!response.ok) {
+        throw new Error(`Server responded with status ${response.status}`)
+      }
+
+      setStatus('success')
+      setFormData({ name: '', email: '', message: '' })
+    } catch (err) {
+      console.error('Contact submission error:', err)
+      setStatus('error')
+    }
   }
 
   function handleChange(field: keyof typeof formData) {
@@ -60,11 +83,18 @@ export default function Contact() {
         {/* Contact form */}
         <div>
           {status === 'success' ? (
-            <div className="border border-black p-8">
-              <p className="font-bold text-black text-lg mb-2">Message received.</p>
-              <p className="text-[#555555] text-sm">
-                Thanks for reaching out. I'll be in touch shortly.
+            <div className="border border-black p-8 bg-[#FBFBFB]">
+              <p className="font-black text-black text-lg mb-2">Message received.</p>
+              <p className="text-[#555555] text-sm mb-6 leading-relaxed">
+                Thanks for reaching out! Your message was routed to my automation system, and I will be in touch shortly.
               </p>
+              <button
+                type="button"
+                onClick={() => setStatus('idle')}
+                className="px-5 py-2.5 bg-black text-white text-xs font-bold uppercase tracking-wider border border-black hover:bg-white hover:text-black transition-colors"
+              >
+                Send Another Message
+              </button>
             </div>
           ) : (
             <form onSubmit={handleSubmit} noValidate aria-label="Contact form">
@@ -145,10 +175,6 @@ export default function Contact() {
                 >
                   {status === 'submitting' ? 'Sending…' : 'Send Message'}
                 </button>
-
-                <p className="text-xs text-[#AAAAAA]">
-                  Note: This form is not yet connected to a backend. Add your preferred form handler before publishing.
-                </p>
               </div>
             </form>
           )}
