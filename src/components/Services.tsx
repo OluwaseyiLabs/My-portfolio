@@ -27,8 +27,7 @@ const services: ServiceItem[] = [
     capabilities: [
       'Business websites & landing pages',
       'Responsive web applications & dashboards',
-      'UI/UX-focused implementation',
-      'Maintainable website refinement',
+      'Modern design and implementation',
     ],
   },
 ]

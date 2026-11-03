@@ -71,8 +71,7 @@ export default function Hero() {
       </div>
 
       {/* Bottom divider with scroll hint */}
-      <div className="mt-20 border-t border-[#E5E5E5] pt-6 flex justify-between items-center">
-        <p className="text-xs text-[#555555] tracking-widest uppercase">Based in Nigeria</p>
+      <div className="mt-20 border-t border-[#E5E5E5] pt-6 flex justify-end items-center">
         <div className="flex items-center gap-2 text-xs text-[#555555]">
           <span className="block w-6 h-0.5 bg-[#E5E5E5]" aria-hidden="true" />
           Scroll to explore
