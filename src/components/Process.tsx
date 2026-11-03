@@ -50,20 +50,41 @@ export default function Process() {
 
       {/* Steps grid */}
       <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-0">
-        {steps.map((step, idx) => (
-          <div
-            key={step.number}
-            className={`py-8 pr-8 border-[#E5E5E5] ${idx < 3 ? 'border-b' : ''
-              } ${idx % 3 !== 2 ? 'lg:border-r' : ''} ${idx % 2 !== 1 ? 'sm:border-r lg:border-r-0' : ''
-              } ${idx % 2 !== 1 && idx % 3 !== 2 ? 'lg:border-r' : ''}`}
-          >
-            <span className="text-4xl font-black text-[#E5E5E5] block mb-4 select-none">
-              {step.number}
-            </span>
-            <h3 className="text-base font-bold text-black mb-2">{step.title}</h3>
-            <p className="text-sm text-[#555555] leading-relaxed">{step.description}</p>
-          </div>
-        ))}
+        {steps.map((step, idx) => {
+          const col3 = idx % 3
+          const col2 = idx % 2
+
+          const lgPadding =
+            col3 === 0
+              ? 'lg:pl-0 lg:pr-10'
+              : col3 === 1
+              ? 'lg:px-10'
+              : 'lg:pl-10 lg:pr-0'
+
+          const smPadding =
+            col2 === 0 ? 'sm:pl-0 sm:pr-8' : 'sm:pl-8 sm:pr-0'
+
+          const lgBorderR = col3 !== 2 ? 'lg:border-r' : 'lg:border-r-0'
+          const lgBorderB = idx < 3 ? 'lg:border-b' : 'lg:border-b-0'
+
+          const smBorderR = col2 === 0 ? 'sm:border-r' : 'sm:border-r-0'
+          const smBorderB = idx < 4 ? 'sm:border-b' : 'sm:border-b-0'
+
+          const mobileBorderB = idx < 5 ? 'border-b sm:border-b-0' : ''
+
+          return (
+            <div
+              key={step.number}
+              className={`py-10 border-[#E5E5E5] ${smPadding} ${lgPadding} ${smBorderR} ${lgBorderR} ${smBorderB} ${lgBorderB} ${mobileBorderB}`}
+            >
+              <span className="text-4xl font-black text-[#E5E5E5] block mb-4 select-none">
+                {step.number}
+              </span>
+              <h3 className="text-base font-bold text-black mb-2">{step.title}</h3>
+              <p className="text-sm text-[#555555] leading-relaxed">{step.description}</p>
+            </div>
+          )
+        })}
       </div>
     </section>
   )

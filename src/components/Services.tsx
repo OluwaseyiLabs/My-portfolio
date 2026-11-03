@@ -26,7 +26,6 @@ const services: ServiceItem[] = [
       'I design and develop modern, responsive websites and web applications with a focus on clear user experiences, thoughtful layouts, and practical functionality.',
     capabilities: [
       'Business websites & landing pages',
-      'E-commerce websites',
       'Responsive web applications & dashboards',
       'UI/UX-focused implementation',
       'Maintainable website refinement',
