@@ -1,18 +1,18 @@
 export default function Hero() {
   return (
     <section
-      className="min-h-screen flex flex-col justify-center pt-16 px-6 lg:px-12 max-w-7xl mx-auto"
+      className="min-h-screen flex flex-col justify-center pt-24 sm:pt-28 pb-12 px-6 sm:px-8 lg:px-12 max-w-7xl mx-auto"
       aria-label="Introduction"
     >
-      <div className="grid lg:grid-cols-[1fr_auto] gap-12 items-end">
+      <div className="grid lg:grid-cols-[1fr_auto] gap-10 lg:gap-12 items-end">
         <div>
           {/* Small label */}
-          <p className="text-xs font-semibold tracking-[0.2em] uppercase text-[#555555] mb-8">
+          <p className="text-xs font-semibold tracking-[0.2em] uppercase text-[#555555] mb-6 sm:mb-8">
             AI Automation &amp; Web Development
           </p>
 
           {/* Main headline */}
-          <h1 className="text-5xl sm:text-6xl md:text-7xl xl:text-8xl font-black leading-[1.0] tracking-tight text-black mb-8">
+          <h1 className="text-4xl sm:text-6xl md:text-7xl xl:text-8xl font-black leading-[1.0] tracking-tight text-black mb-6 sm:mb-8">
             I build systems<br />
             <span className="text-[#333333]">that work for</span><br />
             your business.

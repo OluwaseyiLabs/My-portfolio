@@ -14,7 +14,7 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
 // Default owner email provisioned
-export const OWNER_EMAIL = 'oluwaseyidavid406@gmail.com'
+export const OWNER_EMAIL = import.meta.env.VITE_OWNER_EMAIL || 'oluwaseyidavid406@gmail.com'
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null)

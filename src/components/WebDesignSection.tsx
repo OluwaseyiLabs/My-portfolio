@@ -199,20 +199,62 @@ function Lightbox({
   )
 }
 
+// ── Carousel container skeleton view ──────────────────────────────────────────
+function WebDesignSkeleton() {
+  return (
+    <div className="flex flex-col items-center animate-pulse">
+      <div className="flex items-center justify-center gap-4 w-full px-4 overflow-hidden">
+        {/* Left peek card */}
+        <div className="w-[12vw] max-w-xs aspect-[16/10] bg-[#F2F2F2] border border-[#E5E5E5] opacity-40 hidden sm:block" />
+        {/* Main center card */}
+        <div className="w-[88vw] sm:w-[60vw] md:w-[52vw] max-w-2xl aspect-[16/10] bg-[#F7F7F7] border border-[#E0E0E0] flex items-center justify-center">
+          <div className="w-16 h-10 border border-[#DDDDDD] bg-[#EEEEEE]" />
+        </div>
+        {/* Right peek card */}
+        <div className="w-[12vw] max-w-xs aspect-[16/10] bg-[#F2F2F2] border border-[#E5E5E5] opacity-40 hidden sm:block" />
+      </div>
+
+      {/* Button & dots skeletons */}
+      <div className="flex items-center justify-center gap-4 mt-8">
+        <div className="w-11 h-11 border border-[#E5E5E5] bg-[#FAFAFA]" />
+        <div className="flex gap-2">
+          <div className="w-6 h-1.5 bg-[#DDDDDD]" />
+          <div className="w-1.5 h-1.5 bg-[#EFEFEF]" />
+          <div className="w-1.5 h-1.5 bg-[#EFEFEF]" />
+        </div>
+        <div className="w-11 h-11 border border-[#E5E5E5] bg-[#FAFAFA]" />
+      </div>
+
+      <div className="mt-6 flex flex-col items-center gap-2">
+        <div className="h-4 w-48 bg-[#E0E0E0]" />
+        <div className="h-3 w-32 bg-[#EFEFEF]" />
+      </div>
+    </div>
+  )
+}
+
 // ── Main carousel ─────────────────────────────────────────────────────────────
 export default function WebDesignSection() {
   const [projects, setProjects] = useState<PortfolioProject[]>(fallbackProjects)
+  const [loading, setLoading] = useState(true)
   const [current, setCurrent] = useState(0)
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null)
 
   // Fetch live published web projects from Supabase
   useEffect(() => {
     let isMounted = true
-    fetchPublishedProjects('WEB_DEVELOPMENT').then((data) => {
-      if (isMounted && data.length > 0) {
-        setProjects(data)
-      }
-    })
+    fetchPublishedProjects('WEB_DEVELOPMENT')
+      .then((data) => {
+        if (isMounted) {
+          if (data.length > 0) {
+            setProjects(data)
+          }
+          setLoading(false)
+        }
+      })
+      .catch(() => {
+        if (isMounted) setLoading(false)
+      })
     return () => {
       isMounted = false
     }
@@ -307,119 +349,125 @@ export default function WebDesignSection() {
       </div>
 
       {/* ── Carousel ── */}
-      <div className="relative overflow-hidden" aria-label="Web design portfolio carousel">
-        {/* Track */}
-        <div className="flex items-center justify-center gap-4 px-4 sm:px-0">
-          {carouselItems.map(({ item, position, idx }) => {
-            const isCurrent = position === 'current'
+      {loading ? (
+        <WebDesignSkeleton />
+      ) : (
+        <div className="relative overflow-hidden" aria-label="Web design portfolio carousel">
+          {/* Track */}
+          <div className="flex items-center justify-center gap-4 px-4 sm:px-0">
+            {carouselItems.map(({ item, position, idx }) => {
+              const isCurrent = position === 'current'
 
-            return (
-              <button
-                key={`${item.id}-${position}`}
-                onClick={() =>
-                  isCurrent ? openLightbox(idx) : position === 'prev' ? prev() : next()
-                }
-                aria-label={
-                  isCurrent
-                    ? `View ${item.projectTitle} (Image ${idx + 1} of ${total})`
-                    : position === 'prev'
-                    ? 'Previous website image'
-                    : 'Next website image'
-                }
-                className={`flex-shrink-0 overflow-hidden border transition-all duration-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-black ${
-                  isCurrent
-                    ? 'w-[60vw] sm:w-[52vw] max-w-2xl border-black cursor-zoom-in'
-                    : 'w-[18vw] sm:w-[16vw] max-w-xs border-[#E5E5E5] opacity-40 hover:opacity-60 cursor-pointer'
-                }`}
-                style={{ aspectRatio: '16/10' }}
-              >
-                {item.imageUrl ? (
-                  <img
-                    src={item.imageUrl}
-                    alt={item.altText || item.projectTitle}
-                    className="w-full h-full object-cover"
-                    draggable={false}
-                  />
-                ) : (
-                  <ScreenshotPlaceholder label={isCurrent ? item.projectTitle : ''} />
-                )}
-              </button>
-            )
-          })}
-        </div>
-
-        {/* Arrow buttons */}
-        <div className="flex items-center justify-center gap-4 mt-8 px-6 lg:px-12">
-          <button
-            onClick={prev}
-            disabled={total <= 1}
-            aria-label="Previous website image"
-            className={`w-11 h-11 border flex items-center justify-center transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-black ${
-              total <= 1
-                ? 'border-[#E5E5E5] text-[#CCCCCC] cursor-not-allowed'
-                : 'border-[#E5E5E5] text-black hover:border-black hover:bg-black hover:text-white cursor-pointer'
-            }`}
-          >
-            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
-              <path d="M10 3L5 8l5 5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-            </svg>
-          </button>
-
-          {/* Dot indicators */}
-          <div className="flex items-center gap-2" role="tablist" aria-label="Website image indicators">
-            {galleryItems.map((item, i) => (
-              <button
-                key={item.id}
-                role="tab"
-                aria-selected={i === current}
-                aria-label={`Go to image ${i + 1}`}
-                onClick={() => setCurrent(i)}
-                className={`transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-black ${
-                  i === current ? 'w-6 h-1.5 bg-black' : 'w-1.5 h-1.5 bg-[#E5E5E5] hover:bg-[#AAAAAA]'
-                }`}
-              />
-            ))}
+              return (
+                <button
+                  key={`${item.id}-${position}`}
+                  onClick={() =>
+                    isCurrent ? openLightbox(idx) : position === 'prev' ? prev() : next()
+                  }
+                  aria-label={
+                    isCurrent
+                      ? `View ${item.projectTitle} (Image ${idx + 1} of ${total})`
+                      : position === 'prev'
+                      ? 'Previous website image'
+                      : 'Next website image'
+                  }
+                  className={`flex-shrink-0 overflow-hidden border transition-all duration-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-black ${
+                    isCurrent
+                      ? 'w-[86vw] sm:w-[60vw] md:w-[52vw] max-w-2xl border-black cursor-zoom-in'
+                      : 'w-[10vw] sm:w-[16vw] max-w-xs border-[#E5E5E5] opacity-40 hover:opacity-60 cursor-pointer'
+                  }`}
+                  style={{ aspectRatio: '16/10' }}
+                >
+                  {item.imageUrl ? (
+                    <img
+                      src={item.imageUrl}
+                      alt={item.altText || item.projectTitle}
+                      loading="lazy"
+                      decoding="async"
+                      className="w-full h-full object-cover"
+                      draggable={false}
+                    />
+                  ) : (
+                    <ScreenshotPlaceholder label={isCurrent ? item.projectTitle : ''} />
+                  )}
+                </button>
+              )
+            })}
           </div>
 
-          <button
-            onClick={next}
-            disabled={total <= 1}
-            aria-label="Next website image"
-            className={`w-11 h-11 border flex items-center justify-center transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-black ${
-              total <= 1
-                ? 'border-[#E5E5E5] text-[#CCCCCC] cursor-not-allowed'
-                : 'border-[#E5E5E5] text-black hover:border-black hover:bg-black hover:text-white cursor-pointer'
-            }`}
-          >
-            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
-              <path d="M6 3l5 5-5 5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-            </svg>
-          </button>
-        </div>
+          {/* Arrow buttons */}
+          <div className="flex items-center justify-center gap-4 mt-8 px-6 lg:px-12">
+            <button
+              onClick={prev}
+              disabled={total <= 1}
+              aria-label="Previous website image"
+              className={`w-11 h-11 border flex items-center justify-center transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-black ${
+                total <= 1
+                  ? 'border-[#E5E5E5] text-[#CCCCCC] cursor-not-allowed'
+                  : 'border-[#E5E5E5] text-black hover:border-black hover:bg-black hover:text-white cursor-pointer'
+              }`}
+            >
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                <path d="M10 3L5 8l5 5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+            </button>
 
-        {/* Current website image label & counter */}
-        <div className="mt-6 text-center px-6">
-          <p className="text-base font-black text-black">{currentItem.projectTitle}</p>
-          {currentItem.caption && (
-            <p className="text-xs text-[#555555] mt-1">{currentItem.caption}</p>
-          )}
-          {currentItem.shortDescription && !currentItem.caption && (
-            <p className="text-xs text-[#555555] mt-1">{currentItem.shortDescription}</p>
-          )}
-          <p className="text-[11px] font-mono text-[#888888] mt-2">
-            Image {current + 1} of {total}
-          </p>
-          <button
-            onClick={() => openLightbox(current)}
-            className="mt-3 inline-flex items-center gap-2 text-xs font-semibold text-black border-b border-black pb-0.5 hover:opacity-60 transition-opacity focus:outline-none focus-visible:underline"
-          >
-            View full screenshot
-            <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true">
-              <path d="M1 1h10M11 1v10M1 11l10-10" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/>
-            </svg>
-          </button>
+            {/* Dot indicators */}
+            <div className="flex items-center gap-2" role="tablist" aria-label="Website image indicators">
+              {galleryItems.map((item, i) => (
+                <button
+                  key={item.id}
+                  role="tab"
+                  aria-selected={i === current}
+                  aria-label={`Go to image ${i + 1}`}
+                  onClick={() => setCurrent(i)}
+                  className={`transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-black ${
+                    i === current ? 'w-6 h-1.5 bg-black' : 'w-1.5 h-1.5 bg-[#E5E5E5] hover:bg-[#AAAAAA]'
+                  }`}
+                />
+              ))}
+            </div>
+
+            <button
+              onClick={next}
+              disabled={total <= 1}
+              aria-label="Next website image"
+              className={`w-11 h-11 border flex items-center justify-center transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-black ${
+                total <= 1
+                  ? 'border-[#E5E5E5] text-[#CCCCCC] cursor-not-allowed'
+                  : 'border-[#E5E5E5] text-black hover:border-black hover:bg-black hover:text-white cursor-pointer'
+              }`}
+            >
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                <path d="M6 3l5 5-5 5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+            </button>
+          </div>
+
+          {/* Current website image label & counter */}
+          <div className="mt-6 text-center px-6">
+            <p className="text-base font-black text-black">{currentItem.projectTitle}</p>
+            {currentItem.caption && (
+              <p className="text-xs text-[#555555] mt-1">{currentItem.caption}</p>
+            )}
+            {currentItem.shortDescription && !currentItem.caption && (
+              <p className="text-xs text-[#555555] mt-1">{currentItem.shortDescription}</p>
+            )}
+            <p className="text-[11px] font-mono text-[#888888] mt-2">
+              Image {current + 1} of {total}
+            </p>
+            <button
+              onClick={() => openLightbox(current)}
+              className="mt-3 inline-flex items-center gap-2 text-xs font-semibold text-black border-b border-black pb-0.5 hover:opacity-60 transition-opacity focus:outline-none focus-visible:underline"
+            >
+              View full screenshot
+              <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true">
+                <path d="M1 1h10M11 1v10M1 11l10-10" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/>
+              </svg>
+            </button>
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Lightbox */}
       {lightboxIndex !== null && (

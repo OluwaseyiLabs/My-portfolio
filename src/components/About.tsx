@@ -20,13 +20,13 @@ export default function About() {
         {/* Narrative bio */}
         <div className="space-y-6 text-[#555555] text-base leading-relaxed">
           <p>
-            My work spans two areas that reinforce each other: automation that
+            My work spans two areas that compliment each other: automation that
             removes friction from business operations, and website design and
             development that delivers clear, usable digital experiences to the
             people those businesses serve.
           </p>
           <p>
-            I work directly with businesses — understanding the actual goal
+            I work directly with businesses to understand the actual goals
             before choosing a tool or writing a line of code.
           </p>
         </div>

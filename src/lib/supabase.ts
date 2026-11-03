@@ -1,8 +1,9 @@
 import { createClient } from '@supabase/supabase-js'
 import type { PortfolioProject, ProjectCategory, ProjectStatus, ProjectFormData, PendingImage } from '../types/portfolio'
+import { compressImageFile } from './imageOptimization'
 
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://ppxxsvftvaospmhvpvzx.supabase.co'
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBweHhzdmZ0dmFvc3BtaHZwdnp4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTM3MTUxMjcsImV4cCI6MjEwOTI5MTEyN30.W2-a06TFeyNrlp2uou2KIOmhhoUv3GT2yCu0UkmjSv8'
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || ''
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || ''
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   auth: {
@@ -81,18 +82,19 @@ export async function uploadImageFile(
   projectId: string,
   file: File
 ): Promise<{ storagePath: string; publicUrl: string }> {
-  // Clean filename: timestamp + sanitized name
-  const ext = file.name.split('.').pop()?.toLowerCase() || 'png'
+  // Automatically compress bitmap images to optimized WebP
+  const optimizedFile = await compressImageFile(file)
+  const ext = optimizedFile.name.split('.').pop()?.toLowerCase() || 'webp'
   const randomSuffix = Math.random().toString(36).substring(2, 8)
   const safeName = `${Date.now()}-${randomSuffix}.${ext}`
   const storagePath = `${projectId}/${safeName}`
 
   const { error: uploadError } = await supabase.storage
     .from(BUCKET_NAME)
-    .upload(storagePath, file, {
+    .upload(storagePath, optimizedFile, {
       cacheControl: '31536000',
       upsert: true,
-      contentType: file.type || 'image/png',
+      contentType: optimizedFile.type || 'image/webp',
     })
 
   if (uploadError) {
@@ -410,9 +412,9 @@ export async function submitInquiry(payload: InquiryPayload): Promise<InquiryRes
   const candidateEndpoints = [
     '/api/n8n/portfolio-request',
     '/api/n8n-test/portfolio-request',
-    'https://ucy00zep.rpcld.net/webhook/portfolio-request',
-    'https://ucy00zep.rpcld.net/webhook-test/portfolio-request',
-  ]
+    import.meta.env.VITE_N8N_WEBHOOK_URL,
+    import.meta.env.VITE_N8N_TEST_WEBHOOK_URL,
+  ].filter(Boolean) as string[]
 
   let webhookDelivered = false
   let lastWebhookError = ''

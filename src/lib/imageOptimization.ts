@@ -40,6 +40,82 @@ export function validateImageFile(file: File): ImageValidationResult {
 }
 
 /**
+ * Compresses an image file before upload using browser Canvas API.
+ * Downscales images exceeding max dimensions and converts to optimized WebP.
+ * Preserves SVGs and already tiny files (< 100KB) as-is.
+ */
+export async function compressImageFile(
+  file: File,
+  maxWidth = 2048,
+  maxHeight = 2048,
+  quality = 0.85
+): Promise<File> {
+  if (typeof window === 'undefined') return file
+  if (file.type === 'image/svg+xml' || file.size < 100 * 1024) {
+    return file
+  }
+
+  return new Promise((resolve) => {
+    const img = new Image()
+    const url = URL.createObjectURL(file)
+
+    img.onload = () => {
+      URL.revokeObjectURL(url)
+      let { width, height } = img
+
+      // Compute downscaled dimensions
+      if (width > maxWidth || height > maxHeight) {
+        if (width / height > maxWidth / maxHeight) {
+          height = Math.round((height * maxWidth) / width)
+          width = maxWidth
+        } else {
+          width = Math.round((width * maxHeight) / height)
+          height = maxHeight
+        }
+      }
+
+      const canvas = document.createElement('canvas')
+      canvas.width = Math.max(1, width)
+      canvas.height = Math.max(1, height)
+      const ctx = canvas.getContext('2d')
+
+      if (!ctx) {
+        resolve(file)
+        return
+      }
+
+      ctx.imageSmoothingEnabled = true
+      ctx.imageSmoothingQuality = 'high'
+      ctx.drawImage(img, 0, 0, canvas.width, canvas.height)
+
+      canvas.toBlob(
+        (blob) => {
+          if (!blob || blob.size >= file.size) {
+            resolve(file)
+            return
+          }
+          const compressedName = file.name.replace(/\.[^.]+$/, '.webp')
+          const compressedFile = new File([blob], compressedName, {
+            type: 'image/webp',
+            lastModified: Date.now(),
+          })
+          resolve(compressedFile)
+        },
+        'image/webp',
+        quality
+      )
+    }
+
+    img.onerror = () => {
+      URL.revokeObjectURL(url)
+      resolve(file)
+    }
+
+    img.src = url
+  })
+}
+
+/**
  * Creates a browser object URL for immediate preview
  */
 export function createPreviewUrl(file: File): string {

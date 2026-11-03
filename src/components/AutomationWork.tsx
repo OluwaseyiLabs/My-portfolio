@@ -38,6 +38,37 @@ const fallbackProjects: PortfolioProject[] = [
   },
 ]
 
+// ── Catalogue skeleton card (container view) ────────────────────────────────
+function AutomationSkeletonCard() {
+  return (
+    <div className="flex flex-col border border-[#E5E5E5] bg-white animate-pulse">
+      <div className="w-full bg-[#F5F5F5] border-b border-[#E5E5E5]" style={{ aspectRatio: '16/9' }}>
+        <div className="w-full h-full flex items-center justify-center">
+          <div className="w-10 h-6 border border-[#E0E0E0] bg-[#EAEAEA]" />
+        </div>
+      </div>
+      <div className="p-6 flex-1 flex flex-col justify-between gap-6">
+        <div className="space-y-3">
+          <div className="flex items-center justify-between">
+            <div className="h-2.5 w-16 bg-[#E5E5E5]" />
+            <div className="h-2.5 w-10 bg-[#EFEFEF]" />
+          </div>
+          <div className="h-5 w-4/5 bg-[#E0E0E0]" />
+          <div className="space-y-1.5 pt-1">
+            <div className="h-3 w-full bg-[#EEEEEE]" />
+            <div className="h-3 w-3/4 bg-[#EEEEEE]" />
+          </div>
+        </div>
+        <div className="flex gap-2 pt-3 border-t border-[#F0F0F0]">
+          <div className="h-4 w-12 bg-[#EBEBEB]" />
+          <div className="h-4 w-16 bg-[#EBEBEB]" />
+          <div className="h-4 w-10 bg-[#EBEBEB]" />
+        </div>
+      </div>
+    </div>
+  )
+}
+
 // ── Catalogue card ────────────────────────────────────────────────────────────
 function ProjectCard({
   project,
@@ -48,6 +79,7 @@ function ProjectCard({
   index: number
   onOpen: (p: PortfolioProject) => void
 }) {
+  const [imgLoaded, setImgLoaded] = useState(false)
   const primaryImage =
     project.images?.find((img) => img.is_primary)?.public_url ||
     project.images?.[0]?.public_url
@@ -61,16 +93,27 @@ function ProjectCard({
         aria-label={`View case study: ${project.title}`}
       >
         <div
-          className="w-full bg-[#F5F5F5] border-b border-[#E5E5E5] flex items-center justify-center overflow-hidden"
+          className="relative w-full bg-[#F5F5F5] border-b border-[#E5E5E5] flex items-center justify-center overflow-hidden"
           style={{ aspectRatio: '16/9' }}
         >
           {primaryImage ? (
-            <img
-              src={primaryImage}
-              alt={project.title}
-              className="w-full h-full object-cover group-hover:scale-[1.02] transition-transform duration-300"
-              loading="lazy"
-            />
+            <>
+              {!imgLoaded && (
+                <div className="absolute inset-0 bg-[#F4F4F4] animate-pulse flex items-center justify-center">
+                  <div className="w-10 h-6 border border-[#E0E0E0] bg-[#EAEAEA]" />
+                </div>
+              )}
+              <img
+                src={primaryImage}
+                alt={project.title}
+                loading="lazy"
+                decoding="async"
+                onLoad={() => setImgLoaded(true)}
+                className={`w-full h-full object-cover group-hover:scale-[1.02] transition-all duration-300 ${
+                  imgLoaded ? 'opacity-100' : 'opacity-0'
+                }`}
+              />
+            </>
           ) : (
             <div className="flex flex-col items-center gap-2 p-6 text-center">
               {/* n8n-style node grid icon */}
@@ -355,16 +398,24 @@ function ProjectModal({
 // ── Main Section ──────────────────────────────────────────────────────────────
 export default function AutomationWork() {
   const [projects, setProjects] = useState<PortfolioProject[]>(fallbackProjects)
+  const [loading, setLoading] = useState(true)
   const [selected, setSelected] = useState<PortfolioProject | null>(null)
 
   // Fetch live published projects from Supabase
   useEffect(() => {
     let isMounted = true
-    fetchPublishedProjects('AI_AUTOMATION').then((data) => {
-      if (isMounted && data.length > 0) {
-        setProjects(data)
-      }
-    })
+    fetchPublishedProjects('AI_AUTOMATION')
+      .then((data) => {
+        if (isMounted) {
+          if (data.length > 0) {
+            setProjects(data)
+          }
+          setLoading(false)
+        }
+      })
+      .catch(() => {
+        if (isMounted) setLoading(false)
+      })
     return () => {
       isMounted = false
     }
@@ -394,14 +445,22 @@ export default function AutomationWork() {
 
       {/* Catalogue grid */}
       <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
-        {projects.map((project, idx) => (
-          <ProjectCard
-            key={project.id}
-            project={project}
-            index={idx}
-            onOpen={handleOpen}
-          />
-        ))}
+        {loading ? (
+          <>
+            <AutomationSkeletonCard />
+            <AutomationSkeletonCard />
+            <AutomationSkeletonCard />
+          </>
+        ) : (
+          projects.map((project, idx) => (
+            <ProjectCard
+              key={project.id}
+              project={project}
+              index={idx}
+              onOpen={handleOpen}
+            />
+          ))
+        )}
 
         {/* Upcoming Project Card */}
         <div className="border border-dashed border-[#E5E5E5] flex flex-col items-center justify-center gap-3 p-10 text-center min-h-[260px]">
