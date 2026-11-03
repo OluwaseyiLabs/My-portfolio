@@ -408,12 +408,14 @@ export async function submitInquiry(payload: InquiryPayload): Promise<InquiryRes
     console.warn('Database save skipped:', dbErr)
   }
 
-  // 2. Deliver to n8n Webhook
+  // 2. Deliver to n8n Production Webhook
+  const productionWebhook =
+    import.meta.env.VITE_N8N_WEBHOOK_URL ||
+    'https://ucy00zep.rpcld.net/webhook/portfolio-request'
+
   const candidateEndpoints = [
     '/api/n8n/portfolio-request',
-    '/api/n8n-test/portfolio-request',
-    import.meta.env.VITE_N8N_WEBHOOK_URL,
-    import.meta.env.VITE_N8N_TEST_WEBHOOK_URL,
+    productionWebhook,
   ].filter(Boolean) as string[]
 
   let webhookDelivered = false
