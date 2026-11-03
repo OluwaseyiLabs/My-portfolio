@@ -58,3 +58,4 @@ export interface PendingImage {
   sortOrder: number
   isExisting?: boolean
 }
+

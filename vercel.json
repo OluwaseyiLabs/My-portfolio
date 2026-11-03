@@ -1,0 +1,16 @@
+{
+  "rewrites": [
+    {
+      "source": "/api/n8n-test/:path*",
+      "destination": "https://ucy00zep.rpcld.net/webhook-test/:path*"
+    },
+    {
+      "source": "/api/n8n/:path*",
+      "destination": "https://ucy00zep.rpcld.net/webhook/:path*"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
+  ]
+}

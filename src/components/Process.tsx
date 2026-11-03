@@ -58,8 +58,8 @@ export default function Process() {
             col3 === 0
               ? 'lg:pl-0 lg:pr-10'
               : col3 === 1
-              ? 'lg:px-10'
-              : 'lg:pl-10 lg:pr-0'
+                ? 'lg:px-10'
+                : 'lg:pl-10 lg:pr-0'
 
           const smPadding =
             col2 === 0 ? 'sm:pl-0 sm:pr-8' : 'sm:pl-8 sm:pr-0'

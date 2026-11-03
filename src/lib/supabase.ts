@@ -344,3 +344,145 @@ export async function updateProjectStatus(projectId: string, newStatus: ProjectS
     throw new Error(error.message)
   }
 }
+
+export interface InquiryPayload {
+  name: string
+  email: string
+  message: string
+}
+
+export interface InquiryResult {
+  success: boolean
+  savedToDb: boolean
+  webhookDelivered: boolean
+  webhookError?: string
+}
+
+export interface PortfolioInquiry {
+  id: string
+  name: string
+  email: string
+  message: string
+  status: string
+  webhook_sent: boolean
+  webhook_response?: string
+  created_at: string
+}
+
+/**
+ * Submit contact inquiry:
+ * 1. Persists safely to Supabase database so submissions are never lost
+ * 2. Attempts n8n webhook delivery (proxies + direct URLs)
+ * 3. Returns delivery status
+ */
+export async function submitInquiry(payload: InquiryPayload): Promise<InquiryResult> {
+  const submittedAt = new Date().toISOString()
+  let savedToDb = false
+  let inquiryId: string | null = null
+
+  // 1. Persist to Supabase
+  try {
+    const { data, error } = await supabase
+      .from('portfolio_inquiries')
+      .insert([
+        {
+          name: payload.name.trim(),
+          email: payload.email.trim(),
+          message: payload.message.trim(),
+          webhook_sent: false,
+          created_at: submittedAt,
+        },
+      ])
+      .select('id')
+      .single()
+
+    if (!error && data) {
+      savedToDb = true
+      inquiryId = data.id
+    } else if (error) {
+      console.warn('Database inquiry insert error:', error.message)
+    }
+  } catch (dbErr) {
+    console.warn('Database save skipped:', dbErr)
+  }
+
+  // 2. Deliver to n8n Webhook
+  const candidateEndpoints = [
+    '/api/n8n/portfolio-request',
+    '/api/n8n-test/portfolio-request',
+    'https://ucy00zep.rpcld.net/webhook/portfolio-request',
+    'https://ucy00zep.rpcld.net/webhook-test/portfolio-request',
+  ]
+
+  let webhookDelivered = false
+  let lastWebhookError = ''
+
+  const bodyData = JSON.stringify({
+    name: payload.name.trim(),
+    email: payload.email.trim(),
+    message: payload.message.trim(),
+    submittedAt,
+    source: 'portfolio_contact_form',
+  })
+
+  for (const url of candidateEndpoints) {
+    try {
+      const res = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: bodyData,
+      })
+
+      if (res.ok) {
+        webhookDelivered = true
+        break
+      } else {
+        const text = await res.text().catch(() => '')
+        lastWebhookError = `HTTP ${res.status}: ${text}`
+      }
+    } catch (err: any) {
+      lastWebhookError = err?.message || String(err)
+    }
+  }
+
+  // 3. Update DB record with delivery status
+  if (inquiryId) {
+    try {
+      await supabase
+        .from('portfolio_inquiries')
+        .update({
+          webhook_sent: webhookDelivered,
+          webhook_response: webhookDelivered ? 'OK' : lastWebhookError.slice(0, 500),
+        })
+        .eq('id', inquiryId)
+    } catch {
+      // non-critical
+    }
+  }
+
+  return {
+    success: savedToDb || webhookDelivered,
+    savedToDb,
+    webhookDelivered,
+    webhookError: lastWebhookError,
+  }
+}
+
+/**
+ * Fetch inquiries for Studio dashboard
+ */
+export async function fetchInquiries(): Promise<PortfolioInquiry[]> {
+  const { data, error } = await supabase
+    .from('portfolio_inquiries')
+    .select('*')
+    .order('created_at', { ascending: false })
+
+  if (error) {
+    console.warn('Failed to fetch inquiries:', error.message)
+    return []
+  }
+
+  return data || []
+}
+
+

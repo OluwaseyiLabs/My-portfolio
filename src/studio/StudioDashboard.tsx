@@ -9,6 +9,8 @@ import {
   fetchStudioProjects,
   deleteProjectPermanently,
   updateProjectStatus,
+  fetchInquiries,
+  type PortfolioInquiry,
 } from '../lib/supabase'
 import ProjectEditorModal from './ProjectEditorModal'
 import ProjectPreviewModal from './ProjectPreviewModal'
@@ -17,8 +19,11 @@ export default function StudioDashboard() {
   const { signOut } = useAuth()
 
   // State
+  const [activeView, setActiveView] = useState<'PROJECTS' | 'INQUIRIES'>('PROJECTS')
   const [projects, setProjects] = useState<PortfolioProject[]>([])
+  const [inquiries, setInquiries] = useState<PortfolioInquiry[]>([])
   const [loading, setLoading] = useState(true)
+  const [loadingInquiries, setLoadingInquiries] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   // Filters & Search
@@ -48,9 +53,23 @@ export default function StudioDashboard() {
     }
   }, [])
 
+  // Load inquiries
+  const loadInquiries = useCallback(async () => {
+    try {
+      setLoadingInquiries(true)
+      const data = await fetchInquiries()
+      setInquiries(data)
+    } catch (err: any) {
+      console.error('Failed to load inquiries:', err)
+    } finally {
+      setLoadingInquiries(false)
+    }
+  }, [])
+
   useEffect(() => {
     loadProjects()
-  }, [loadProjects])
+    loadInquiries()
+  }, [loadProjects, loadInquiries])
 
   // Metrics computation
   const metrics = useMemo(() => {
@@ -147,34 +166,162 @@ export default function StudioDashboard() {
 
       {/* ── Main Dashboard Body ── */}
       <main className="max-w-7xl mx-auto px-6 lg:px-12 py-10 w-full flex-1">
-        {/* Title & Actions Row */}
-        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-8 pb-6 border-b-2 border-black">
-          <div>
-            <p className="text-xs font-semibold tracking-[0.2em] uppercase text-[#555555] mb-2">
-              Portfolio Content Manager
-            </p>
-            <h1 className="text-3xl sm:text-4xl font-black tracking-tight text-black">
-              Projects &amp; Workflows
-            </h1>
-          </div>
-
-          {/* Two prominent action buttons */}
-          <div className="flex flex-wrap items-center gap-3">
-            <button
-              onClick={() => setCreatingCategory('AI_AUTOMATION')}
-              className="inline-flex items-center gap-2 px-5 py-3 bg-black text-white text-xs font-bold uppercase tracking-wider border border-black hover:bg-white hover:text-black transition-colors"
-            >
-              <span>+</span> Add AI Automation Project
-            </button>
-
-            <button
-              onClick={() => setCreatingCategory('WEB_DEVELOPMENT')}
-              className="inline-flex items-center gap-2 px-5 py-3 bg-white text-black text-xs font-bold uppercase tracking-wider border border-black hover:bg-black hover:text-white transition-colors"
-            >
-              <span>+</span> Add Website Project
-            </button>
-          </div>
+        {/* View Tabs */}
+        <div className="flex items-center gap-2 mb-8 border-b border-[#E5E5E5] pb-3">
+          <button
+            onClick={() => setActiveView('PROJECTS')}
+            className={`px-4 py-2 text-xs font-bold uppercase tracking-wider transition-colors ${
+              activeView === 'PROJECTS'
+                ? 'bg-black text-white'
+                : 'bg-white text-[#555555] hover:text-black border border-[#E5E5E5]'
+            }`}
+          >
+            Portfolio Projects ({projects.length})
+          </button>
+          <button
+            onClick={() => {
+              setActiveView('INQUIRIES')
+              loadInquiries()
+            }}
+            className={`px-4 py-2 text-xs font-bold uppercase tracking-wider transition-colors inline-flex items-center gap-2 ${
+              activeView === 'INQUIRIES'
+                ? 'bg-black text-white'
+                : 'bg-white text-[#555555] hover:text-black border border-[#E5E5E5]'
+            }`}
+          >
+            <span>Contact Inquiries</span>
+            {inquiries.length > 0 && (
+              <span
+                className={`px-1.5 py-0.5 text-[10px] font-black rounded-full ${
+                  activeView === 'INQUIRIES' ? 'bg-white text-black' : 'bg-black text-white'
+                }`}
+              >
+                {inquiries.length}
+              </span>
+            )}
+          </button>
         </div>
+
+        {activeView === 'INQUIRIES' ? (
+          <div>
+            {/* Inquiries Header */}
+            <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-6 pb-4 border-b border-black">
+              <div>
+                <p className="text-xs font-semibold tracking-[0.2em] uppercase text-[#555555] mb-1">
+                  Inbox
+                </p>
+                <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-black">
+                  Contact Form Inquiries ({inquiries.length})
+                </h1>
+              </div>
+              <button
+                onClick={loadInquiries}
+                disabled={loadingInquiries}
+                className="px-4 py-2 border border-black text-xs font-bold uppercase tracking-wider hover:bg-black hover:text-white transition-colors self-start sm:self-auto disabled:opacity-50"
+              >
+                {loadingInquiries ? 'Refreshing…' : '↻ Refresh Inquiries'}
+              </button>
+            </div>
+
+            {loadingInquiries && inquiries.length === 0 ? (
+              <div className="p-16 border border-[#E5E5E5] text-center text-xs font-bold text-[#777777]">
+                Loading inquiries from database...
+              </div>
+            ) : inquiries.length === 0 ? (
+              <div className="p-16 border border-dashed border-[#CCCCCC] text-center">
+                <p className="text-sm font-bold text-black mb-1">No inquiries yet</p>
+                <p className="text-xs text-[#777777]">
+                  Messages submitted through your portfolio contact form will appear here.
+                </p>
+              </div>
+            ) : (
+              <div className="border border-[#E5E5E5] overflow-x-auto bg-white">
+                <table className="w-full text-left border-collapse text-xs">
+                  <thead>
+                    <tr className="bg-[#F8F8F8] border-b border-[#E5E5E5] text-[10px] uppercase font-bold tracking-wider text-[#555555]">
+                      <th className="py-3 px-4">Date</th>
+                      <th className="py-3 px-4">Name</th>
+                      <th className="py-3 px-4">Email</th>
+                      <th className="py-3 px-4">Message</th>
+                      <th className="py-3 px-4">Webhook Status</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-[#E5E5E5]">
+                    {inquiries.map((inq) => (
+                      <tr key={inq.id} className="hover:bg-[#FAFAFA] transition-colors">
+                        <td className="py-3 px-4 whitespace-nowrap text-[#777777]">
+                          {new Date(inq.created_at).toLocaleString([], {
+                            month: 'short',
+                            day: 'numeric',
+                            hour: '2-digit',
+                            minute: '2-digit',
+                          })}
+                        </td>
+                        <td className="py-3 px-4 font-bold text-black whitespace-nowrap">
+                          {inq.name}
+                        </td>
+                        <td className="py-3 px-4 whitespace-nowrap">
+                          <a
+                            href={`mailto:${inq.email}`}
+                            className="text-black underline underline-offset-2 hover:opacity-70"
+                          >
+                            {inq.email}
+                          </a>
+                        </td>
+                        <td className="py-3 px-4 text-[#333333] max-w-md break-words">
+                          {inq.message}
+                        </td>
+                        <td className="py-3 px-4 whitespace-nowrap">
+                          {inq.webhook_sent ? (
+                            <span className="inline-block px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider bg-black text-white">
+                              Webhook Delivered
+                            </span>
+                          ) : (
+                            <span
+                              className="inline-block px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider border border-[#CCCCCC] text-[#555555]"
+                              title={inq.webhook_response || 'Waiting for active webhook'}
+                            >
+                              Saved in DB
+                            </span>
+                          )}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        ) : (
+          <div>
+            {/* Title & Actions Row */}
+            <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-8 pb-6 border-b-2 border-black">
+              <div>
+                <p className="text-xs font-semibold tracking-[0.2em] uppercase text-[#555555] mb-2">
+                  Portfolio Content Manager
+                </p>
+                <h1 className="text-3xl sm:text-4xl font-black tracking-tight text-black">
+                  Projects &amp; Workflows
+                </h1>
+              </div>
+
+              {/* Two prominent action buttons */}
+              <div className="flex flex-wrap items-center gap-3">
+                <button
+                  onClick={() => setCreatingCategory('AI_AUTOMATION')}
+                  className="inline-flex items-center gap-2 px-5 py-3 bg-black text-white text-xs font-bold uppercase tracking-wider border border-black hover:bg-white hover:text-black transition-colors"
+                >
+                  <span>+</span> Add AI Automation Project
+                </button>
+
+                <button
+                  onClick={() => setCreatingCategory('WEB_DEVELOPMENT')}
+                  className="inline-flex items-center gap-2 px-5 py-3 bg-white text-black text-xs font-bold uppercase tracking-wider border border-black hover:bg-black hover:text-white transition-colors"
+                >
+                  <span>+</span> Add Website Project
+                </button>
+              </div>
+            </div>
 
         {/* ── Metrics Cards ── */}
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 mb-10">
@@ -429,6 +576,8 @@ export default function StudioDashboard() {
                 })}
               </tbody>
             </table>
+          </div>
+        )}
           </div>
         )}
       </main>

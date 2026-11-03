@@ -1,4 +1,5 @@
 import { useState, type FormEvent } from 'react'
+import { submitInquiry, type InquiryResult } from '../lib/supabase'
 
 type FormStatus = 'idle' | 'submitting' | 'success' | 'error'
 
@@ -6,6 +7,8 @@ export default function Contact() {
   const [status, setStatus] = useState<FormStatus>('idle')
   const [formData, setFormData] = useState({ name: '', email: '', message: '' })
   const [errors, setErrors] = useState<Partial<typeof formData>>({})
+  const [submissionResult, setSubmissionResult] = useState<InquiryResult | null>(null)
+  const [errorMessage, setErrorMessage] = useState<string | null>(null)
 
   function validate() {
     const errs: Partial<typeof formData> = {}
@@ -27,31 +30,29 @@ export default function Contact() {
       return
     }
     setErrors({})
+    setErrorMessage(null)
     setStatus('submitting')
 
     try {
-      const response = await fetch('https://ucy00zep.rpcld.net/webhook-test/portfolio-request', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          name: formData.name.trim(),
-          email: formData.email.trim(),
-          message: formData.message.trim(),
-          submittedAt: new Date().toISOString(),
-          source: 'portfolio_contact_form',
-        }),
+      const result = await submitInquiry({
+        name: formData.name,
+        email: formData.email,
+        message: formData.message,
       })
 
-      if (!response.ok) {
-        throw new Error(`Server responded with status ${response.status}`)
+      if (result.success) {
+        setSubmissionResult(result)
+        setStatus('success')
+        setFormData({ name: '', email: '', message: '' })
+      } else {
+        setErrorMessage(
+          result.webhookError || 'Failed to send message. Please try again or reach out directly via email.'
+        )
+        setStatus('error')
       }
-
-      setStatus('success')
-      setFormData({ name: '', email: '', message: '' })
-    } catch (err) {
+    } catch (err: any) {
       console.error('Contact submission error:', err)
+      setErrorMessage('Something went wrong. Please try again.')
       setStatus('error')
     }
   }
@@ -88,9 +89,20 @@ export default function Contact() {
               <p className="text-[#555555] text-sm mb-6 leading-relaxed">
                 Thanks for reaching out! Your message was routed to my automation system, and I will be in touch shortly.
               </p>
+              {submissionResult && !submissionResult.webhookDelivered && submissionResult.savedToDb && (
+                <div className="text-xs text-[#333333] bg-[#F0F0F0] p-4 mb-6 border-l-4 border-black">
+                  <p className="font-bold mb-1">Notice for Oluwaseyi (Automation setup):</p>
+                  <p className="leading-relaxed">
+                    Your message was captured and saved securely to your Supabase database. To have n8n execute your workflow automatically, toggle your workflow from <strong>Inactive</strong> to <strong>Active</strong> in n8n (top-right of canvas), or click <strong>Execute workflow</strong> in n8n before submitting a test.
+                  </p>
+                </div>
+              )}
               <button
                 type="button"
-                onClick={() => setStatus('idle')}
+                onClick={() => {
+                  setStatus('idle')
+                  setSubmissionResult(null)
+                }}
                 className="px-5 py-2.5 bg-black text-white text-xs font-bold uppercase tracking-wider border border-black hover:bg-white hover:text-black transition-colors"
               >
                 Send Another Message
@@ -165,7 +177,9 @@ export default function Contact() {
                 </div>
 
                 {status === 'error' && (
-                  <p role="alert" className="text-sm text-red-600">Something went wrong. Please try again.</p>
+                  <p role="alert" className="text-sm text-red-600">
+                    {errorMessage || 'Something went wrong. Please try again.'}
+                  </p>
                 )}
 
                 <button
