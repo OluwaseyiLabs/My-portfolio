@@ -1,31 +1,33 @@
 import { useState, useEffect, useCallback } from 'react'
+import { fetchPublishedProjects } from '../lib/supabase'
+import type { PortfolioProject } from '../types/portfolio'
 
-// ── Project data ──────────────────────────────────────────────────────────────
-interface WebProject {
-  id: string
-  title: string
-  type: string
-  /** Path to the real screenshot once supplied. null = placeholder. */
-  image: string | null
-  alt: string
-}
-
-const projects: WebProject[] = [
+// ── Default fallback projects ────────────────────────────────────────────────
+const fallbackProjects: PortfolioProject[] = [
   {
     id: 'voltedge',
     title: 'VoltEdge Tech & Accessories',
-    type: 'E-commerce Website',
-    image: null,
-    alt: 'VoltEdge Tech & Accessories e-commerce website screenshot',
+    slug: 'voltedge-tech-accessories',
+    category: 'WEB_DEVELOPMENT',
+    short_description: 'E-commerce Website and instant-order checkout experience',
+    technologies: ['E-commerce', 'React', 'TypeScript', 'Responsive Design'],
+    status: 'PUBLISHED',
+    featured: true,
+    sort_order: 1,
+    images: [],
   },
   {
     id: 'portfolio',
     title: 'Oluwaseyi Portfolio',
-    type: 'Personal Portfolio',
-    image: null,
-    alt: 'Oluwaseyi personal portfolio website screenshot',
+    slug: 'oluwaseyi-portfolio',
+    category: 'WEB_DEVELOPMENT',
+    short_description: 'Personal Portfolio website with custom CMS architecture',
+    technologies: ['React', 'TypeScript', 'Vite', 'Tailwind CSS'],
+    status: 'PUBLISHED',
+    featured: true,
+    sort_order: 2,
+    images: [],
   },
-  // ── Add more projects here as screenshots become available ──
 ]
 
 // ── Placeholder image ─────────────────────────────────────────────────────────
@@ -60,7 +62,7 @@ function Lightbox({
   startIndex,
   onClose,
 }: {
-  projects: WebProject[]
+  projects: PortfolioProject[]
   startIndex: number
   onClose: () => void
 }) {
@@ -84,17 +86,22 @@ function Lightbox({
   // Lock body scroll
   useEffect(() => {
     document.body.style.overflow = 'hidden'
-    return () => { document.body.style.overflow = '' }
+    return () => {
+      document.body.style.overflow = ''
+    }
   }, [])
 
   const project = projects[current]
+  const projectImage =
+    project?.images?.find((img) => img.is_primary)?.public_url ||
+    project?.images?.[0]?.public_url
 
   return (
     <div
       className="fixed inset-0 z-[200] bg-black/90 flex flex-col"
       role="dialog"
       aria-modal="true"
-      aria-label={`Web design portfolio — ${project.title}`}
+      aria-label={`Web design portfolio — ${project?.title}`}
     >
       {/* Top bar */}
       <div className="flex items-center justify-between px-6 py-4 flex-shrink-0">
@@ -126,12 +133,12 @@ function Lightbox({
         </button>
 
         {/* Image / placeholder */}
-        <div className="w-full max-w-3xl h-full max-h-[70dvh] overflow-hidden border border-white/10">
-          {project.image ? (
+        <div className="w-full max-w-3xl h-full max-h-[70dvh] overflow-hidden border border-white/10 flex items-center justify-center bg-black/40">
+          {projectImage ? (
             <img
-              src={project.image}
-              alt={project.alt}
-              className="w-full h-full object-cover"
+              src={projectImage}
+              alt={project.title}
+              className="w-full h-full object-contain"
             />
           ) : (
             <ScreenshotPlaceholder label={project.title} />
@@ -151,9 +158,21 @@ function Lightbox({
       </div>
 
       {/* Bottom label */}
-      <div className="flex-shrink-0 px-6 py-5 text-center border-t border-white/10">
+      <div className="flex-shrink-0 px-6 py-5 text-center border-t border-white/10 flex flex-col items-center gap-1.5">
         <p className="text-sm font-semibold text-white">{project.title}</p>
-        <p className="text-xs text-white/50 mt-0.5">{project.type}</p>
+        {project.short_description && (
+          <p className="text-xs text-white/60 max-w-md">{project.short_description}</p>
+        )}
+        {project.project_url && (
+          <a
+            href={project.project_url}
+            target="_blank"
+            rel="noreferrer"
+            className="inline-flex items-center gap-1 text-xs font-bold text-white border-b border-white hover:opacity-75 transition-opacity mt-1"
+          >
+            Visit Live Website ↗
+          </a>
+        )}
       </div>
     </div>
   )
@@ -161,10 +180,24 @@ function Lightbox({
 
 // ── Main carousel ─────────────────────────────────────────────────────────────
 export default function WebDesignSection() {
+  const [projects, setProjects] = useState<PortfolioProject[]>(fallbackProjects)
   const [current, setCurrent] = useState(0)
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null)
-  const total = projects.length
 
+  // Fetch live published web projects from Supabase
+  useEffect(() => {
+    let isMounted = true
+    fetchPublishedProjects('WEB_DEVELOPMENT').then((data) => {
+      if (isMounted && data.length > 0) {
+        setProjects(data)
+      }
+    })
+    return () => {
+      isMounted = false
+    }
+  }, [])
+
+  const total = projects.length
   const prev = () => setCurrent((i) => (i - 1 + total) % total)
   const next = () => setCurrent((i) => (i + 1) % total)
 
@@ -180,7 +213,9 @@ export default function WebDesignSection() {
     }
     document.addEventListener('keydown', handler)
     return () => document.removeEventListener('keydown', handler)
-  }, [lightboxIndex])
+  }, [lightboxIndex, total])
+
+  if (total === 0) return null
 
   // Indices for the carousel strip: prev, current, next
   const prevIdx = (current - 1 + total) % total
@@ -191,6 +226,8 @@ export default function WebDesignSection() {
     { project: projects[current], position: 'current', idx: current },
     { project: projects[nextIdx], position: 'next', idx: nextIdx },
   ]
+
+  const currentProj = projects[current]
 
   return (
     <section id="web-design" className="py-24 max-w-7xl mx-auto">
@@ -217,11 +254,23 @@ export default function WebDesignSection() {
         <div className="flex items-center justify-center gap-4 px-4 sm:px-0">
           {carouselItems.map(({ project, position, idx }) => {
             const isCurrent = position === 'current'
+            const itemImage =
+              project.images?.find((img) => img.is_primary)?.public_url ||
+              project.images?.[0]?.public_url
+
             return (
               <button
-                key={`${project.id}-${position}`}
-                onClick={() => isCurrent ? openLightbox(idx) : (position === 'prev' ? prev() : next())}
-                aria-label={isCurrent ? `View ${project.title}` : position === 'prev' ? 'Previous project' : 'Next project'}
+                key={`${project.id}-${position}-${idx}`}
+                onClick={() =>
+                  isCurrent ? openLightbox(idx) : position === 'prev' ? prev() : next()
+                }
+                aria-label={
+                  isCurrent
+                    ? `View ${project.title}`
+                    : position === 'prev'
+                    ? 'Previous project'
+                    : 'Next project'
+                }
                 className={`flex-shrink-0 overflow-hidden border transition-all duration-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-black ${
                   isCurrent
                     ? 'w-[60vw] sm:w-[52vw] max-w-2xl border-black cursor-zoom-in'
@@ -229,10 +278,10 @@ export default function WebDesignSection() {
                 }`}
                 style={{ aspectRatio: '16/10' }}
               >
-                {project.image ? (
+                {itemImage ? (
                   <img
-                    src={project.image}
-                    alt={project.alt}
+                    src={itemImage}
+                    alt={project.title}
                     className="w-full h-full object-cover"
                     draggable={false}
                   />
@@ -285,8 +334,10 @@ export default function WebDesignSection() {
 
         {/* Current project label */}
         <div className="mt-6 text-center px-6">
-          <p className="text-base font-black text-black">{projects[current].title}</p>
-          <p className="text-xs text-[#555555] mt-1">{projects[current].type}</p>
+          <p className="text-base font-black text-black">{currentProj.title}</p>
+          {currentProj.short_description && (
+            <p className="text-xs text-[#555555] mt-1">{currentProj.short_description}</p>
+          )}
           <button
             onClick={() => openLightbox(current)}
             className="mt-3 inline-flex items-center gap-2 text-xs font-semibold text-black border-b border-black pb-0.5 hover:opacity-60 transition-opacity focus:outline-none focus-visible:underline"
@@ -297,13 +348,6 @@ export default function WebDesignSection() {
             </svg>
           </button>
         </div>
-      </div>
-
-      {/* Owner notice */}
-      <div className="mt-10 mx-6 lg:mx-12 border border-dashed border-[#E5E5E5] p-5">
-        <p className="text-xs text-[#555555] leading-relaxed">
-          <strong className="text-black">Owner action needed:</strong> Add real website screenshots by setting the <code className="font-mono bg-[#F5F5F5] px-1">image</code> field in <code className="font-mono bg-[#F5F5F5] px-1">WebDesignSection.tsx</code> for each project and placing the files in <code className="font-mono bg-[#F5F5F5] px-1">public/images/</code>.
-        </p>
       </div>
 
       {/* Lightbox */}
