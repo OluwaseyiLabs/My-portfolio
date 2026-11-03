@@ -2,8 +2,12 @@ import { createClient } from '@supabase/supabase-js'
 import type { PortfolioProject, ProjectCategory, ProjectStatus, ProjectFormData, PendingImage } from '../types/portfolio'
 import { compressImageFile } from './imageOptimization'
 
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || ''
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || ''
+const DEFAULT_SUPABASE_URL = 'https://ppxxsvftvaospmhvpvzx.supabase.co'
+const DEFAULT_SUPABASE_ANON_KEY =
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBweHhzdmZ0dmFvc3BtaHZwdnp4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTM3MTUxMjcsImV4cCI6MjEwOTI5MTEyN30.W2-a06TFeyNrlp2uou2KIOmhhoUv3GT2yCu0UkmjSv8'
+
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || DEFAULT_SUPABASE_URL
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || DEFAULT_SUPABASE_ANON_KEY
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   auth: {
