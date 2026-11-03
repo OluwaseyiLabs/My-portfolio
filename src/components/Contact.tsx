@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from 'react'
-import { submitInquiry, type InquiryResult } from '../lib/supabase'
+import { submitInquiry } from '../lib/supabase'
 
 type FormStatus = 'idle' | 'submitting' | 'success' | 'error'
 
@@ -7,7 +7,6 @@ export default function Contact() {
   const [status, setStatus] = useState<FormStatus>('idle')
   const [formData, setFormData] = useState({ name: '', email: '', message: '' })
   const [errors, setErrors] = useState<Partial<typeof formData>>({})
-  const [submissionResult, setSubmissionResult] = useState<InquiryResult | null>(null)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
 
   function validate() {
@@ -41,7 +40,6 @@ export default function Contact() {
       })
 
       if (result.success) {
-        setSubmissionResult(result)
         setStatus('success')
         setFormData({ name: '', email: '', message: '' })
       } else {
@@ -87,22 +85,11 @@ export default function Contact() {
             <div className="border border-black p-8 bg-[#FBFBFB]">
               <p className="font-black text-black text-lg mb-2">Message received.</p>
               <p className="text-[#555555] text-sm mb-6 leading-relaxed">
-                Thanks for reaching out! Your message was routed to my automation system, and I will be in touch shortly.
+                Thank you for reaching out, I will be in touch shortly.
               </p>
-              {submissionResult && !submissionResult.webhookDelivered && submissionResult.savedToDb && (
-                <div className="text-xs text-[#333333] bg-[#F0F0F0] p-4 mb-6 border-l-4 border-black">
-                  <p className="font-bold mb-1">Notice for Oluwaseyi (Automation setup):</p>
-                  <p className="leading-relaxed">
-                    Your message was captured and saved securely to your Supabase database. To have n8n execute your workflow automatically, toggle your workflow from <strong>Inactive</strong> to <strong>Active</strong> in n8n (top-right of canvas), or click <strong>Execute workflow</strong> in n8n before submitting a test.
-                  </p>
-                </div>
-              )}
               <button
                 type="button"
-                onClick={() => {
-                  setStatus('idle')
-                  setSubmissionResult(null)
-                }}
+                onClick={() => setStatus('idle')}
                 className="px-5 py-2.5 bg-black text-white text-xs font-bold uppercase tracking-wider border border-black hover:bg-white hover:text-black transition-colors"
               >
                 Send Another Message
