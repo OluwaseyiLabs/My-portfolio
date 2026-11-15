@@ -1,4 +1,4 @@
-import { useState, useRef, type DragEvent } from 'react'
+import { useState, useRef, useEffect, type DragEvent } from 'react'
 import type {
   PortfolioProject,
   ProjectCategory,
@@ -7,6 +7,7 @@ import type {
   PendingImage,
 } from '../types/portfolio'
 import {
+  supabase,
   createProjectWithImages,
   updateProjectWithImages,
 } from '../lib/supabase'
@@ -72,6 +73,8 @@ export default function ProjectEditorModal({
   const [showPreview, setShowPreview] = useState(false)
   const [dragActive, setDragActive] = useState(false)
   const errorRef = useRef<HTMLDivElement>(null)
+  const [slugStatus, setSlugStatus] = useState<'idle' | 'checking' | 'taken' | 'available'>('idle')
+  const [suggestedSlug, setSuggestedSlug] = useState<string | null>(null)
 
   // Auto-generate slug when title changes (if new or user hasn't typed a custom slug)
   const handleTitleChange = (val: string) => {
@@ -80,6 +83,56 @@ export default function ProjectEditorModal({
       setSlug(generateSlug(val))
     }
   }
+
+  // Live debounced slug uniqueness check against database
+  useEffect(() => {
+    const cleanSlug = slug.trim()
+    if (!cleanSlug) {
+      setSlugStatus('idle')
+      setSuggestedSlug(null)
+      return
+    }
+
+    if (isEditing && cleanSlug === initialProject?.slug) {
+      setSlugStatus('available')
+      setSuggestedSlug(null)
+      return
+    }
+
+    setSlugStatus('checking')
+    const timer = setTimeout(async () => {
+      try {
+        let query = supabase
+          .from('portfolio_projects')
+          .select('id')
+          .eq('slug', cleanSlug)
+
+        if (isEditing && initialProject?.id) {
+          query = query.neq('id', initialProject.id)
+        }
+
+        const { data } = await query.maybeSingle()
+
+        if (data) {
+          setSlugStatus('taken')
+          const suffix =
+            category === 'WEB_DEVELOPMENT' &&
+            !cleanSlug.endsWith('-website') &&
+            !cleanSlug.endsWith('-web')
+              ? `${cleanSlug}-website`
+              : `${cleanSlug}-2`
+          setSuggestedSlug(suffix)
+        } else {
+          setSlugStatus('available')
+          setSuggestedSlug(null)
+        }
+      } catch {
+        setSlugStatus('idle')
+      }
+    }, 250)
+
+    return () => clearTimeout(timer)
+  }, [slug, category, isEditing, initialProject?.id, initialProject?.slug])
 
   // Handle image files selection
   const handleFiles = (fileList: FileList | null) => {
@@ -207,6 +260,13 @@ export default function ProjectEditorModal({
       return
     }
 
+    if (slugStatus === 'taken') {
+      const alt = suggestedSlug || (category === 'WEB_DEVELOPMENT' ? `${slug}-website` : `${slug}-2`)
+      setSubmitError(`The URL slug "${slug}" is already in use by another project. Please click "Use '${alt}'" or enter a unique slug.`)
+      setTimeout(() => errorRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' }), 50)
+      return
+    }
+
     setSubmitting(true)
     setSubmitError(null)
 
@@ -254,7 +314,21 @@ export default function ProjectEditorModal({
       onSaved()
     } catch (err: any) {
       console.error('Save failed:', err)
-      setSubmitError(err.message || 'Failed to save project. Please check network/database.')
+      const rawMsg: string = err?.message || ''
+      if (
+        rawMsg.includes('portfolio_projects_slug_key') ||
+        rawMsg.includes('unique constraint') ||
+        rawMsg.includes('already in use') ||
+        rawMsg.includes('already taken')
+      ) {
+        const alt = suggestedSlug || (category === 'WEB_DEVELOPMENT' ? `${slug}-website` : `${slug}-2`)
+        setSuggestedSlug(alt)
+        setSlugStatus('taken')
+        setSubmitError(`The URL slug "${slug}" is already in use by another project. Please change the URL Slug to something unique (e.g. "${alt}").`)
+      } else {
+        setSubmitError(rawMsg || 'Failed to save project. Please check network/database.')
+      }
+      setTimeout(() => errorRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' }), 50)
     } finally {
       setSubmitting(false)
     }
@@ -361,17 +435,60 @@ export default function ProjectEditorModal({
               </div>
 
               <div>
-                <label className="block text-xs font-bold uppercase tracking-[0.1em] text-black mb-1.5">
-                  URL Slug *
-                </label>
+                <div className="flex items-center justify-between mb-1.5">
+                  <label className="block text-xs font-bold uppercase tracking-[0.1em] text-black">
+                    URL Slug *
+                  </label>
+                  {slugStatus === 'available' && slug.trim() && (
+                    <span className="text-[10px] text-green-700 font-bold uppercase tracking-wider">
+                      ✓ Available
+                    </span>
+                  )}
+                  {slugStatus === 'taken' && (
+                    <span className="text-[10px] text-red-600 font-bold uppercase tracking-wider">
+                      ⚠ Taken
+                    </span>
+                  )}
+                  {slugStatus === 'checking' && (
+                    <span className="text-[10px] text-[#777777] uppercase tracking-wider animate-pulse">
+                      Checking...
+                    </span>
+                  )}
+                </div>
                 <input
                   type="text"
                   required
                   value={slug}
-                  onChange={(e) => setSlug(e.target.value)}
-                  placeholder="e.g. lead-management-automation"
-                  className="w-full border border-[#D5D5D5] focus:border-black px-3.5 py-2.5 text-sm outline-none transition-colors"
+                  onChange={(e) => {
+                    setSlug(e.target.value)
+                    setSubmitError(null)
+                  }}
+                  placeholder="e.g. voltedge-accessories"
+                  className={`w-full border px-3.5 py-2.5 text-sm outline-none transition-colors ${
+                    slugStatus === 'taken'
+                      ? 'border-red-500 focus:border-red-600 bg-red-50/30'
+                      : 'border-[#D5D5D5] focus:border-black'
+                  }`}
                 />
+                {slugStatus === 'taken' && (
+                  <div className="mt-1.5 p-2.5 bg-red-50 border border-red-200 text-xs flex flex-wrap items-center justify-between gap-2">
+                    <span className="text-red-700 font-medium">
+                      This slug is already used by another project.
+                    </span>
+                    {suggestedSlug && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setSlug(suggestedSlug)
+                          setSubmitError(null)
+                        }}
+                        className="px-2.5 py-1 bg-black text-white text-[11px] font-bold hover:bg-[#333333] transition-colors whitespace-nowrap"
+                      >
+                        Use &ldquo;{suggestedSlug}&rdquo; →
+                      </button>
+                    )}
+                  </div>
+                )}
               </div>
             </div>
 

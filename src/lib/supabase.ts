@@ -157,6 +157,9 @@ export async function createProjectWithImages(
     .single()
 
   if (projectError) {
+    if (projectError.code === '23505' || projectError.message.includes('portfolio_projects_slug_key')) {
+      throw new Error(`The URL slug "${formData.slug}" is already in use by another project. Please choose a different slug.`)
+    }
     throw new Error(projectError.message)
   }
 
@@ -244,6 +247,9 @@ export async function updateProjectWithImages(
     .eq('id', projectId)
 
   if (updateError) {
+    if (updateError.code === '23505' || updateError.message.includes('portfolio_projects_slug_key')) {
+      throw new Error(`The URL slug "${formData.slug}" is already in use by another project. Please choose a different slug.`)
+    }
     throw new Error(updateError.message)
   }
 
