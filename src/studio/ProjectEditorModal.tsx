@@ -1,4 +1,4 @@
-import { useState, type DragEvent } from 'react'
+import { useState, useRef, type DragEvent } from 'react'
 import type {
   PortfolioProject,
   ProjectCategory,
@@ -71,6 +71,7 @@ export default function ProjectEditorModal({
   const [submitError, setSubmitError] = useState<string | null>(null)
   const [showPreview, setShowPreview] = useState(false)
   const [dragActive, setDragActive] = useState(false)
+  const errorRef = useRef<HTMLDivElement>(null)
 
   // Auto-generate slug when title changes (if new or user hasn't typed a custom slug)
   const handleTitleChange = (val: string) => {
@@ -202,6 +203,7 @@ export default function ProjectEditorModal({
     const errorMsg = validate(targetStatus)
     if (errorMsg) {
       setSubmitError(errorMsg)
+      setTimeout(() => errorRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' }), 50)
       return
     }
 
@@ -301,8 +303,9 @@ export default function ProjectEditorModal({
           <div className="p-6 sm:p-8 overflow-y-auto space-y-6 flex-1 text-sm">
             {submitError && (
               <div
+                ref={errorRef}
                 role="alert"
-                className="p-4 bg-[#FBFBFB] border-l-4 border-black text-xs font-semibold text-black"
+                className="p-4 bg-red-50 border-l-4 border-red-600 text-xs font-semibold text-red-700"
               >
                 {submitError}
               </div>
@@ -634,7 +637,13 @@ export default function ProjectEditorModal({
           </div>
 
           {/* Action Bar */}
-          <div className="sticky bottom-0 z-10 bg-white border-t border-[#E5E5E5] px-6 py-4 flex flex-wrap items-center justify-between gap-3">
+          <div className="sticky bottom-0 z-10 bg-white border-t border-[#E5E5E5] px-6 py-4 flex flex-col gap-3">
+            {submitError && (
+              <p role="alert" className="text-xs font-semibold text-red-700 bg-red-50 border border-red-200 px-3 py-2">
+                {submitError}
+              </p>
+            )}
+            <div className="flex flex-wrap items-center justify-between gap-3">
             <button
               type="button"
               disabled={submitting}
@@ -671,6 +680,7 @@ export default function ProjectEditorModal({
               >
                 {submitting ? 'Saving...' : 'Publish to Portfolio →'}
               </button>
+            </div>
             </div>
           </div>
         </div>
