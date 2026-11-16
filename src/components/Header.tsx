@@ -1,4 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
+import ThemeToggle from './ThemeToggle'
+import { useContent } from '../context/ContentContext'
+import { MailIcon } from './icons'
 
 // ── Service dropdown items ────────────────────────────────────────────────────
 const serviceItems = [
@@ -11,8 +14,7 @@ const serviceItems = [
         <path d="M7 10h6M7 13h4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
       </svg>
     ),
-    title: 'AI Automation',
-    subtitle: 'Workflows, AI agents & business automation',
+    key: 'nav.service1',
   },
   {
     href: '#web-design',
@@ -26,38 +28,100 @@ const serviceItems = [
         <path d="M7 17v-2M13 17v-2M5 17h10" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
       </svg>
     ),
-    title: 'Web Design & Development',
-    subtitle: 'Websites, landing pages & web applications',
+    key: 'nav.service2',
   },
 ]
 
 // ── Simple plain nav links (no dropdown) ─────────────────────────────────────
 const plainLinks = [
-  { label: 'Work', href: '#work' },
-  { label: 'Process', href: '#process' },
-  { label: 'About', href: '#about' },
-  { label: 'Contact', href: '#contact' },
+  { key: 'nav.work', href: '#work' },
+  { key: 'nav.process', href: '#process' },
+  { key: 'nav.about', href: '#about' },
+  { key: 'nav.contact', href: '#contact' },
 ]
 
 // ── Mobile flat link list (all links) ────────────────────────────────────────
 const mobileLinks = [
-  { label: 'Services', href: '#services' },
+  { key: 'nav.services', href: '#services' },
   ...plainLinks,
 ]
 
 export default function Header() {
+  const { t } = useContent()
   const [scrolled, setScrolled] = useState(false)
   const [menuOpen, setMenuOpen] = useState(false)
   const [dropdownOpen, setDropdownOpen] = useState(false)
   const [mobileServicesOpen, setMobileServicesOpen] = useState(false)
   const dropdownRef = useRef<HTMLDivElement>(null)
+  const progressRef = useRef<HTMLDivElement>(null)
+  const [activeId, setActiveId] = useState<string>('')
 
   // Scroll detection
   useEffect(() => {
-    const handleScroll = () => setScrolled(window.scrollY > 24)
-    window.addEventListener('scroll', handleScroll, { passive: true })
-    return () => window.removeEventListener('scroll', handleScroll)
+    let raf = 0
+    let max = 0
+    // measure the page height only when the layout can change, never inside the scroll handler
+    const measure = () => {
+      max = document.documentElement.scrollHeight - window.innerHeight
+    }
+    const update = () => {
+      raf = 0
+      setScrolled(window.scrollY > 24)
+      const p = max > 0 ? Math.min(1, window.scrollY / max) : 0
+      if (progressRef.current) progressRef.current.style.transform = `scaleX(${p})`
+    }
+    const onScroll = () => {
+      if (!raf) raf = requestAnimationFrame(update)
+    }
+    const onResize = () => {
+      measure()
+      onScroll()
+    }
+    measure()
+    update()
+    const ro = typeof ResizeObserver !== 'undefined' ? new ResizeObserver(onResize) : null
+    ro?.observe(document.body)
+    window.addEventListener('scroll', onScroll, { passive: true })
+    window.addEventListener('resize', onResize)
+    return () => {
+      cancelAnimationFrame(raf)
+      ro?.disconnect()
+      window.removeEventListener('scroll', onScroll)
+      window.removeEventListener('resize', onResize)
+    }
   }, [])
+
+  // Highlight the nav link for the section currently in view
+  useEffect(() => {
+    if (typeof IntersectionObserver === 'undefined') return
+    const ids = ['services', 'work', 'web-design', 'process', 'about', 'contact']
+    const els = ids.map((id) => document.getElementById(id)).filter((el): el is HTMLElement => !!el)
+    const io = new IntersectionObserver(
+      (entries) => {
+        for (const e of entries) {
+          if (e.isIntersecting) setActiveId(e.target.id)
+        }
+      },
+      { rootMargin: '-45% 0px -50% 0px' },
+    )
+    els.forEach((el) => io.observe(el))
+    return () => io.disconnect()
+  }, [])
+
+  // Mobile menu: Escape closes, page scroll locked while open
+  useEffect(() => {
+    if (!menuOpen) return
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setMenuOpen(false)
+    }
+    document.addEventListener('keydown', onKey)
+    const prevOverflow = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    return () => {
+      document.removeEventListener('keydown', onKey)
+      document.body.style.overflow = prevOverflow
+    }
+  }, [menuOpen])
 
   // Close dropdown on outside click
   useEffect(() => {
@@ -87,8 +151,8 @@ export default function Header() {
 
   return (
     <header
-      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-        scrolled ? 'bg-white border-b border-[#E5E5E5]' : 'bg-white/90 backdrop-blur-sm'
+      className={`fixed top-0 left-0 right-0 z-50 transform-gpu backdrop-blur-lg backdrop-saturate-150 border-b transition-[background-color,border-color] duration-300 ${
+        scrolled ? 'bg-bg/70 border-line/70' : 'bg-bg/40 border-transparent'
       }`}
     >
       <div className="max-w-7xl mx-auto px-6 lg:px-12 h-16 flex items-center justify-between">
@@ -96,10 +160,10 @@ export default function Header() {
         {/* Wordmark */}
         <a
           href="#"
-          className="text-base font-bold tracking-tight text-black hover:opacity-70 transition-opacity focus:outline-none focus-visible:ring-2 focus-visible:ring-black focus-visible:ring-offset-2"
-          aria-label="Oluwaseyi — Home"
+          className="py-3 -my-3 text-base font-bold tracking-tight text-fg hover:opacity-70 transition-opacity focus:outline-none focus-visible:ring-2 focus-visible:ring-fg focus-visible:ring-offset-2"
+          aria-label={`${t('site.wordmark')} home`}
         >
-          Oluwaseyi.
+          {t('site.wordmark')}
         </a>
 
         {/* ── Desktop nav ── */}
@@ -112,9 +176,9 @@ export default function Header() {
               aria-haspopup="true"
               aria-expanded={dropdownOpen}
               aria-controls="services-dropdown"
-              className="flex items-center gap-1.5 text-sm font-medium text-[#333333] hover:text-black transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-black focus-visible:ring-offset-2 rounded-sm"
+              className="flex items-center gap-1.5 text-sm font-medium text-muted hover:text-fg transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-fg focus-visible:ring-offset-2 rounded-sm"
             >
-              Services
+              {t('nav.services')}
               {/* chevron */}
               <svg
                 width="14"
@@ -134,29 +198,29 @@ export default function Header() {
                 id="services-dropdown"
                 role="menu"
                 aria-label="Services menu"
-                className="absolute top-full left-1/2 -translate-x-1/2 mt-4 w-[340px] bg-black text-white shadow-2xl overflow-hidden"
+                className="menu-in absolute top-full left-1/2 -translate-x-1/2 mt-4 w-[340px] bg-fg/92 backdrop-blur-xl backdrop-saturate-150 text-bg shadow-2xl overflow-hidden"
                 style={{ borderRadius: '6px' }}
               >
                 {/* Service rows */}
                 {serviceItems.map((item) => (
                   <a
-                    key={item.title}
+                    key={item.key}
                     href={item.href}
                     role="menuitem"
                     onClick={closeAll}
-                    className="flex items-center gap-4 px-5 py-4 border-b border-white/10 hover:bg-white/10 transition-colors focus:outline-none focus-visible:bg-white/10 group"
+                    className="flex items-center gap-4 px-5 py-4 border-b border-bg/10 hover:bg-bg/10 transition-colors focus:outline-none focus-visible:bg-bg/10 group"
                   >
                     {/* Icon box */}
-                    <span className="flex-shrink-0 w-10 h-10 flex items-center justify-center bg-white/10 text-white group-hover:bg-white/20 transition-colors" style={{ borderRadius: '6px' }}>
+                    <span className="flex-shrink-0 w-10 h-10 flex items-center justify-center bg-bg/10 text-bg group-hover:bg-bg/20 transition-colors" style={{ borderRadius: '6px' }}>
                       {item.icon}
                     </span>
                     {/* Text */}
                     <span>
-                      <span className="block text-sm font-semibold text-white leading-tight">
-                        {item.title}
+                      <span className="block text-sm font-semibold text-bg leading-tight">
+                        {t(`${item.key}.title`)}
                       </span>
-                      <span className="block text-xs text-white/60 mt-0.5 leading-snug">
-                        {item.subtitle}
+                      <span className="block text-xs text-bg/60 mt-0.5 leading-snug">
+                        {t(`${item.key}.subtitle`)}
                       </span>
                     </span>
                     {/* Arrow */}
@@ -166,7 +230,7 @@ export default function Header() {
                       viewBox="0 0 14 14"
                       fill="none"
                       aria-hidden="true"
-                      className="ml-auto flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity text-white"
+                      className="ml-auto flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity text-bg"
                     >
                       <path d="M3 7h8M7 3l4 4-4 4" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
                     </svg>
@@ -174,19 +238,19 @@ export default function Header() {
                 ))}
 
                 {/* CTA row */}
-                <div className="px-5 py-4 bg-white/5 flex items-center justify-between">
+                <div className="px-5 py-4 bg-bg/5 flex items-center justify-between">
                   <div>
-                    <p className="text-sm font-semibold text-white leading-tight">Like What You See?</p>
-                    <p className="text-xs text-white/60 mt-0.5">Let&apos;s connect &amp; build something.</p>
+                    <p className="text-sm font-semibold text-bg leading-tight">{t('nav.dropdown.title')}</p>
+                    <p className="text-xs text-bg/60 mt-0.5">{t('nav.dropdown.subtitle')}</p>
                   </div>
                   <a
                     href="#contact"
                     role="menuitem"
                     onClick={closeAll}
-                    className="flex-shrink-0 ml-4 inline-flex items-center gap-1.5 px-4 py-2 bg-white text-black text-xs font-bold hover:bg-[#E5E5E5] transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-black"
+                    className="flex-shrink-0 ml-4 inline-flex items-center gap-1.5 px-4 py-2 bg-bg text-fg text-xs font-bold hover:bg-line transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-bg focus-visible:ring-offset-2 focus-visible:ring-offset-black"
                     style={{ borderRadius: '4px' }}
                   >
-                    Get Started
+                    {t('nav.dropdown.button')}
                     <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true">
                       <path d="M2 6h8M6 2l4 4-4 4" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
                     </svg>
@@ -201,46 +265,64 @@ export default function Header() {
             <a
               key={link.href}
               href={link.href}
-              className="text-sm font-medium text-[#333333] hover:text-black transition-colors"
+              aria-current={activeId === link.href.slice(1) || (link.href === '#work' && activeId === 'web-design') ? 'true' : undefined}
+              className={`relative text-sm font-medium transition-colors after:absolute after:left-0 after:-bottom-1 after:h-px after:w-full after:origin-left after:bg-fg after:transition-transform after:duration-300 ${
+                activeId === link.href.slice(1) || (link.href === '#work' && activeId === 'web-design')
+                  ? 'text-fg after:scale-x-100'
+                  : 'text-muted hover:text-fg after:scale-x-0 hover:after:scale-x-100'
+              }`}
             >
-              {link.label}
+              {t(link.key)}
             </a>
           ))}
         </nav>
 
-        {/* CTA button */}
-        <a
-          href="#contact"
-          className="hidden md:inline-flex items-center px-5 py-2 bg-black text-white text-sm font-medium border border-black hover:bg-white hover:text-black transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-black focus-visible:ring-offset-2"
-        >
-          Let&apos;s Talk
-        </a>
+        {/* CTA button + theme toggle */}
+        <div className="hidden md:flex items-center gap-6">
+          <ThemeToggle />
+          <a
+            href="#contact"
+            data-track="cta:lets-talk-header"
+            className="btn-slide inline-flex items-center px-5 py-2 pr-6 bg-fg text-bg text-sm font-medium border border-fg hover:bg-bg hover:text-fg transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-fg focus-visible:ring-offset-2"
+          >
+            <span className="btn-slide__label">{t('nav.cta')}</span>
+            <span className="btn-slide__icon"><MailIcon /></span>
+          </a>
+        </div>
 
         {/* Mobile hamburger */}
         <button
-          className="md:hidden flex flex-col justify-center gap-1.5 w-8 h-8 focus:outline-none focus-visible:ring-2 focus-visible:ring-black"
+          className="md:hidden flex flex-col justify-center gap-1.5 w-11 h-11 -mr-2 px-2.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-fg"
           aria-label={menuOpen ? 'Close menu' : 'Open menu'}
           aria-expanded={menuOpen}
           onClick={() => setMenuOpen((v) => !v)}
         >
-          <span className={`block h-0.5 bg-black transition-all duration-200 ${menuOpen ? 'rotate-45 translate-y-2' : ''}`} />
-          <span className={`block h-0.5 bg-black transition-all duration-200 ${menuOpen ? 'opacity-0' : ''}`} />
-          <span className={`block h-0.5 bg-black transition-all duration-200 ${menuOpen ? '-rotate-45 -translate-y-2' : ''}`} />
+          <span className={`block h-0.5 bg-fg transition-all duration-200 ${menuOpen ? 'rotate-45 translate-y-2' : ''}`} />
+          <span className={`block h-0.5 bg-fg transition-all duration-200 ${menuOpen ? 'opacity-0' : ''}`} />
+          <span className={`block h-0.5 bg-fg transition-all duration-200 ${menuOpen ? '-rotate-45 -translate-y-2' : ''}`} />
         </button>
       </div>
 
+      {/* Scroll progress */}
+      <div
+        ref={progressRef}
+        aria-hidden="true"
+        className="absolute left-0 bottom-0 h-0.5 w-full origin-left bg-fg"
+        style={{ transform: 'scaleX(0)' }}
+      />
+
       {/* ── Mobile menu ── */}
       {menuOpen && (
-        <div className="md:hidden bg-white border-t border-[#E5E5E5] px-6 py-6 flex flex-col gap-1">
+        <div className="menu-in md:hidden bg-bg/70 backdrop-blur-xl backdrop-saturate-150 border-t border-line/70 px-6 py-6 flex flex-col gap-1">
 
           {/* Services accordion */}
           <div>
             <button
               onClick={() => setMobileServicesOpen((v) => !v)}
               aria-expanded={mobileServicesOpen}
-              className="w-full flex items-center justify-between py-3 text-base font-medium text-black focus:outline-none"
+              className="w-full flex items-center justify-between py-3 text-base font-medium text-fg focus:outline-none"
             >
-              Services
+              {t('nav.services')}
               <svg
                 width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true"
                 className={`transition-transform duration-200 ${mobileServicesOpen ? 'rotate-180' : ''}`}
@@ -250,32 +332,32 @@ export default function Header() {
             </button>
 
             {mobileServicesOpen && (
-              <div className="mt-1 mb-3 bg-black overflow-hidden" style={{ borderRadius: '6px' }}>
+              <div className="mt-1 mb-3 bg-fg overflow-hidden" style={{ borderRadius: '6px' }}>
                 {serviceItems.map((item) => (
                   <a
-                    key={item.title}
+                    key={item.key}
                     href={item.href}
                     onClick={closeAll}
-                    className="flex items-center gap-3 px-4 py-3.5 border-b border-white/10 hover:bg-white/10 transition-colors"
+                    className="flex items-center gap-3 px-4 py-3.5 border-b border-bg/10 hover:bg-bg/10 transition-colors"
                   >
-                    <span className="flex-shrink-0 w-8 h-8 flex items-center justify-center bg-white/10 text-white" style={{ borderRadius: '4px' }}>
+                    <span className="flex-shrink-0 w-8 h-8 flex items-center justify-center bg-bg/10 text-bg" style={{ borderRadius: '4px' }}>
                       {item.icon}
                     </span>
                     <span>
-                      <span className="block text-sm font-semibold text-white">{item.title}</span>
-                      <span className="block text-xs text-white/60 mt-0.5">{item.subtitle}</span>
+                      <span className="block text-sm font-semibold text-bg">{t(`${item.key}.title`)}</span>
+                      <span className="block text-xs text-bg/60 mt-0.5">{t(`${item.key}.subtitle`)}</span>
                     </span>
                   </a>
                 ))}
-                <div className="px-4 py-3 bg-white/5 flex items-center justify-between">
-                  <p className="text-xs text-white/60">Let&apos;s build something together.</p>
+                <div className="px-4 py-3 bg-bg/5 flex items-center justify-between">
+                  <p className="text-xs text-bg/60">{t('nav.dropdown.mobileNote')}</p>
                   <a
                     href="#contact"
                     onClick={closeAll}
-                    className="ml-3 inline-flex items-center px-3 py-1.5 bg-white text-black text-xs font-bold hover:bg-[#E5E5E5] transition-colors"
+                    className="ml-3 inline-flex items-center px-3 py-1.5 bg-bg text-fg text-xs font-bold hover:bg-line transition-colors"
                     style={{ borderRadius: '4px' }}
                   >
-                    Get Started
+                    {t('nav.dropdown.button')}
                   </a>
                 </div>
               </div>
@@ -288,18 +370,22 @@ export default function Header() {
               key={link.href}
               href={link.href}
               onClick={closeAll}
-              className="block py-3 text-base font-medium text-black border-t border-[#F0F0F0] hover:opacity-60 transition-opacity"
+              className="block py-3 text-base font-medium text-fg border-t border-surface hover:opacity-60 transition-opacity"
             >
-              {link.label}
+              {t(link.key)}
             </a>
           ))}
 
+          <ThemeToggle className="mt-4 py-2" />
+
           <a
             href="#contact"
+            data-track="cta:lets-talk-mobile"
             onClick={closeAll}
-            className="mt-4 inline-flex items-center justify-center px-5 py-3 bg-black text-white text-sm font-medium border border-black hover:bg-white hover:text-black transition-colors duration-200"
+            className="btn-slide mt-2 inline-flex items-center justify-center px-5 py-3 bg-fg text-bg text-sm font-medium border border-fg hover:bg-bg hover:text-fg transition-colors duration-200"
           >
-            Let&apos;s Talk
+            <span className="btn-slide__label">{t('nav.cta')}</span>
+            <span className="btn-slide__icon"><MailIcon /></span>
           </a>
         </div>
       )}

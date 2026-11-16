@@ -1,0 +1,435 @@
+{
+  "name": "Enquiry from Portfolio",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "portfolio-request",
+        "responseMode": "responseNode",
+        "options": {
+          "allowedOrigins": "*"
+        }
+      },
+      "id": "ffffd601-2d4f-41e1-9d8b-e052406ff40d",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.2,
+      "position": [
+        0,
+        0
+      ],
+      "webhookId": "34de77a9-bb6f-45f0-b7c8-17fea72e2af1"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "8423f6bd-6e59-4226-9f60-3ae667024801",
+              "name": "inquiry_id",
+              "type": "string",
+              "value": "={{ String($json.body?.inquiry_id ?? '').trim() }}"
+            },
+            {
+              "id": "27533327-0559-4988-8747-8ff0779e2517",
+              "name": "id_ok",
+              "type": "boolean",
+              "value": "={{ /^[0-9a-fA-F-]{32,36}$/.test(String($json.body?.inquiry_id ?? '').trim()) }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "33e15234-a28f-43c1-96db-fb2b8653af5d",
+      "name": "Read request",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        224,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "fced79cf-5d9c-4db6-8a72-6f043b0d9d19",
+              "leftValue": "={{ $json.id_ok }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "4e29ffd1-1d25-4cbb-9b7b-482e4f5d5d4f",
+      "name": "Looks like an id?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        448,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://YOUR-PROJECT-REF.supabase.co/rest/v1/rpc/portfolio_claim_inquiry",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ p_id: $json.inquiry_id }) }}",
+        "options": {}
+      },
+      "id": "04e631ad-0c64-4eb3-8d94-ec3e5b1c63cf",
+      "name": "Claim inquiry",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        672,
+        -112
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "REPLACE_WITH_SUPABASE_APIKEY_CREDENTIAL",
+          "name": "Supabase apikey header"
+        }
+      },
+      "onError": "continueErrorOutput",
+      "notes": "Calls the database function that hands this enquiry over once. Set the URL to your Supabase project, and attach a Header Auth credential: name 'apikey', value = your Supabase anon key."
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "7f232cb8-bdfd-4aee-808e-88e4a730ada7",
+              "leftValue": "={{ $json.ok }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "3f28747f-f729-4886-b310-160f11e1bc7d",
+      "name": "Found?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        896,
+        -112
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "48d4a8da-64e5-451c-ae94-68e4aa5e0734",
+              "name": "name",
+              "type": "string",
+              "value": "={{ $json.name }}"
+            },
+            {
+              "id": "f6ed3b4b-9545-4843-ade4-fb15219d9f91",
+              "name": "email",
+              "type": "string",
+              "value": "={{ $json.email }}"
+            },
+            {
+              "id": "c01d8f1c-6807-4eb3-bffc-dbc576145205",
+              "name": "message",
+              "type": "string",
+              "value": "={{ $json.message }}"
+            },
+            {
+              "id": "c5f025e3-c92b-4354-a5a4-592dc2fc0510",
+              "name": "timestamp",
+              "type": "string",
+              "value": "={{ DateTime.fromISO(String($json.created_at), { setZone: true }).isValid ? DateTime.fromISO(String($json.created_at), { setZone: true }).setZone('Africa/Lagos').toFormat('dd/MM/yyyy HH:mm:ss') : $now.setZone('Africa/Lagos').toFormat('dd/MM/yyyy HH:mm:ss') }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "3d66f3ec-7945-4991-a6ff-9dd5e82c914b",
+      "name": "Prepare",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        1120,
+        -224
+      ]
+    },
+    {
+      "parameters": {
+        "sendTo": "oluwaseyidavid406@gmail.com",
+        "subject": "={{ 'New enquiry from ' + $json.name + ' (Portfolio)' }}",
+        "message": "={{ 'Name: ' + $json.name + '\\nEmail: ' + $json.email + '\\nReceived: ' + $json.timestamp + ' (Lagos time)\\nSource: portfolio_contact_form\\n\\nMessage:\\n' + $json.message }}",
+        "options": {
+          "appendAttribution": false,
+          "replyTo": "={{ $json.email }}"
+        }
+      },
+      "id": "04961524-7e91-4a08-b830-d7268e84c8fa",
+      "name": "Email to Oluwaseyi",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        1344,
+        -224
+      ],
+      "webhookId": "1cc895c3-788a-4e46-b2d9-a469a0428a0a",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "1CPI3z6ICJYKdvjC",
+          "name": "Gmail account 2"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $('Prepare').item.json.email }}",
+        "subject": "Thanks for reaching out",
+        "message": "={{ 'Hi ' + $('Prepare').item.json.name + ',\\n\\nThank you for reaching out. I have received your message and I will be in touch shortly.\\n\\nYour message:\\n' + $('Prepare').item.json.message + '\\n\\nOluwaseyi' }}",
+        "options": {
+          "appendAttribution": false,
+          "senderName": "Oluwaseyi"
+        }
+      },
+      "id": "c4ed0f93-e04f-4e54-90ab-bf1a37842103",
+      "name": "Confirmation to client",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        1568,
+        -224
+      ],
+      "webhookId": "ed070ba8-5b0b-45f8-ad7c-945b2e650d7b",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "1CPI3z6ICJYKdvjC",
+          "name": "Gmail account 2"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { \"success\": true, \"message\": \"Thank you for reaching out, I will be in touch shortly.\" } }}",
+        "options": {
+          "responseCode": 200
+        }
+      },
+      "id": "cb538956-cda0-4796-8e22-8e27b7c9364f",
+      "name": "Reply OK",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        1792,
+        -224
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { \"success\": false, \"message\": \"This enquiry could not be processed. Please try again.\" } }}",
+        "options": {
+          "responseCode": 400
+        }
+      },
+      "id": "bfbf2a7f-3596-47bf-a7da-f1c411f9af1e",
+      "name": "Reply invalid",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        672,
+        128
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { \"success\": false, \"message\": \"This enquiry was not found or has already been processed.\" } }}",
+        "options": {
+          "responseCode": 400
+        }
+      },
+      "id": "c7390a14-43f0-4acc-baaa-badf354f0c13",
+      "name": "Reply not found",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        1120,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { \"success\": false, \"message\": \"Your message could not be delivered right now. Please try again, or email me directly.\" } }}",
+        "options": {
+          "responseCode": 502
+        }
+      },
+      "id": "49d2e84e-5d2e-4541-85f4-69dd36114c8d",
+      "name": "Reply failed",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        1568,
+        0
+      ]
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Read request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read request": {
+      "main": [
+        [
+          {
+            "node": "Looks like an id?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Looks like an id?": {
+      "main": [
+        [
+          {
+            "node": "Claim inquiry",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Reply invalid",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Claim inquiry": {
+      "main": [
+        [
+          {
+            "node": "Found?",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Reply failed",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Found?": {
+      "main": [
+        [
+          {
+            "node": "Prepare",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Reply not found",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare": {
+      "main": [
+        [
+          {
+            "node": "Email to Oluwaseyi",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Email to Oluwaseyi": {
+      "main": [
+        [
+          {
+            "node": "Confirmation to client",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Reply failed",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Confirmation to client": {
+      "main": [
+        [
+          {
+            "node": "Reply OK",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "tags": []
+}

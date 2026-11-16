@@ -35,6 +35,7 @@ This repository contains the production code for **Oluwaseyi's personal portfoli
   - Primary buttons: Black `#000000` with white `#FFFFFF` text.
   - Button hover: White `#FFFFFF` with black `#000000` text and a solid black border.
   - **No** blue, purple, colorful gradients, or bright accent colors anywhere in the UI.
+  - Owner-approved exception: the "Available for work" status on project pages is green (`--c-ok`).
   - Project screenshots and preview mockups retain their original brand colors, while the portfolio frame around them remains strictly monochrome.
 - **Typography & Layout**:
   - Bold editorial headlines with high contrast and generous whitespace.
@@ -111,9 +112,9 @@ This repository contains the production code for **Oluwaseyi's personal portfoli
 ## 7. Contact Form & n8n Webhook Architecture
 - **Submission Flow**:
   1. Visitor submits name, email, and message in `Contact.tsx`.
-  2. `submitInquiry()` in `src/lib/supabase.ts` first saves the record to Supabase `portfolio_inquiries` so data is never lost.
-  3. The inquiry payload is then forwarded to the production n8n webhook:
-     - Production endpoint: `https://ucy00zep.rpcld.net/webhook/portfolio-request`
+  2. `submitInquiry()` in `src/lib/supabase.ts` calls the Supabase function `portfolio_submit_inquiry` (validation, sanitising, escalating rate limits) which saves the record to `portfolio_inquiries`, so data is never lost.
+  3. The browser then sends only the new inquiry id to the n8n webhook; n8n claims the real data from the database (`portfolio_claim_inquiry`) before sending any email:
+     - Production endpoint: your n8n webhook (kept in `.env` as `VITE_N8N_WEBHOOK_URL`, never committed)
      - Proxy rewrite path: `/api/n8n/portfolio-request` (configured in `vite.config.ts` and `vercel.json` to prevent CORS issues).
   4. Webhook delivery outcome (`OK` or error) is saved back to the inquiry database record.
 - **Confirmation Message**:
@@ -144,6 +145,6 @@ When running `npm run build` or git commands on Windows within agent sandboxes, 
 
 ## 9. Engineering Standards
 - **Integrity**: Never invent URLs, customer testimonials, metrics, awards, or GitHub links.
-- **No Secrets in Code**: API keys, credentials, or private patient/client data must never be committed. Public Supabase anon keys and project URLs are acceptable as client fallbacks.
+- **No Secrets in Code**: API keys, credentials, URLs of private services, or client data must never be committed. All configuration is read from environment variables (`.env` locally, Vercel env vars in production); see `.env.example` and `SECURITY.md`. There are no hardcoded fallbacks for the Supabase URL/key.
 - **Tailwind v4**: Do not downgrade Tailwind CSS from v4.
 - **Git Remote**: `origin https://github.com/OluwaseyiLabs/My-portfolio.git` on branch `main`.

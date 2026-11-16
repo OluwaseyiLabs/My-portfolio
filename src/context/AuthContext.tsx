@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react'
 import type { User, Session } from '@supabase/supabase-js'
 import { supabase } from '../lib/supabase'
+import { env } from '../lib/env'
 
 interface AuthContextType {
   user: User | null
@@ -13,8 +14,8 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
-// Default owner email provisioned
-export const OWNER_EMAIL = import.meta.env.VITE_OWNER_EMAIL || 'oluwaseyidavid406@gmail.com'
+// Owner email comes from VITE_OWNER_EMAIL (.env). Real access control is enforced by the database rules.
+export const OWNER_EMAIL = env.ownerEmail
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
@@ -44,7 +45,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [])
 
   const isOwner = Boolean(
-    user && (user.email === OWNER_EMAIL || user.app_metadata?.role === 'owner')
+    user &&
+      ((OWNER_EMAIL !== '' && user.email?.toLowerCase() === OWNER_EMAIL) || user.app_metadata?.role === 'owner')
   )
 
   const signIn = async (password: string): Promise<{ error: Error | null }> => {

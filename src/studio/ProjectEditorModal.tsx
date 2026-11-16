@@ -5,11 +5,18 @@ import type {
   ProjectStatus,
   ProjectFormData,
   PendingImage,
+  DraftSection,
 } from '../types/portfolio'
 import {
   supabase,
   createProjectWithImages,
   updateProjectWithImages,
+  fetchProjectSections,
+  saveProjectSections,
+  uploadVideoFile,
+  deleteStorageFile,
+  MAX_VIDEO_BYTES,
+  VIDEO_TYPES,
 } from '../lib/supabase'
 import {
   validateImageFile,
@@ -17,6 +24,10 @@ import {
   generateSlug,
 } from '../lib/imageOptimization'
 import ProjectPreviewModal from './ProjectPreviewModal'
+import SectionsEditor from './SectionsEditor'
+
+const PLATFORM_OPTIONS = ['Web app', 'Mobile app', 'Website', 'E-commerce', 'Desktop app', 'Internal tool']
+const OTHER_PLATFORM = '__other__'
 
 interface ProjectEditorModalProps {
   initialProject?: PortfolioProject | null
@@ -44,11 +55,59 @@ export default function ProjectEditorModal({
   const [solutionDelivered, setSolutionDelivered] = useState(initialProject?.solution_delivered || '')
   const [shortDescription, setShortDescription] = useState(initialProject?.short_description || '')
   const [projectUrl, setProjectUrl] = useState(initialProject?.project_url || '')
-  const [technologiesInput, setTechnologiesInput] = useState(
-    (initialProject?.technologies || []).join(', ')
-  )
   const [featured, setFeatured] = useState(initialProject?.featured || false)
   const [sortOrder, setSortOrder] = useState<number>(initialProject?.sort_order ?? 0)
+
+  // Project video
+  const [videoUrl, setVideoUrl] = useState(initialProject?.video_url || '')
+  const [videoFile, setVideoFile] = useState<File | null>(null)
+  const [videoPreview, setVideoPreview] = useState(initialProject?.video_url || '')
+  const [videoIsCover, setVideoIsCover] = useState(Boolean(initialProject?.video_is_cover))
+
+  // Case study details
+  const [year, setYear] = useState(initialProject?.year || '')
+  const [role, setRole] = useState(initialProject?.role || '')
+  const [platform, setPlatform] = useState(initialProject?.platform || '')
+  const [toolsInput, setToolsInput] = useState(
+    (initialProject?.tools && initialProject.tools.length > 0
+      ? initialProject.tools
+      : initialProject?.technologies || []
+    ).join(', '),
+  )
+  const [sections, setSections] = useState<DraftSection[]>([])
+  const [sectionsLoading, setSectionsLoading] = useState(Boolean(initialProject?.id))
+  const previousSectionPaths = useRef<string[]>([])
+  const hadSections = useRef(false)
+
+  // Load existing case-study sections when editing
+  useEffect(() => {
+    const id = initialProject?.id
+    if (!id) return
+    let alive = true
+    fetchProjectSections(id).then((rows) => {
+      if (!alive) return
+      hadSections.current = rows.length > 0
+      previousSectionPaths.current = rows.flatMap((r) => r.images.map((im) => im.storage_path))
+      setSections(
+        rows.map((r) => ({
+          id: r.id,
+          heading: r.heading || '',
+          subheading: r.subheading || '',
+          body: r.body || '',
+          images: r.images.map((im) => ({
+            id: crypto.randomUUID(),
+            previewUrl: im.url,
+            storagePath: im.storage_path,
+            alt: im.alt || '',
+          })),
+        })),
+      )
+      setSectionsLoading(false)
+    })
+    return () => {
+      alive = false
+    }
+  }, [initialProject?.id])
 
   // Images state
   const [images, setImages] = useState<PendingImage[]>(() => {
@@ -220,6 +279,31 @@ export default function ProjectEditorModal({
     )
   }
 
+  const pickVideo = (file: File | undefined) => {
+    if (!file) return
+    if (!VIDEO_TYPES.includes(file.type)) {
+      setSubmitError('Unsupported video type. Please upload an MP4, WebM or MOV file.')
+      return
+    }
+    if (file.size > MAX_VIDEO_BYTES) {
+      setSubmitError(`Video is too large (${(file.size / (1024 * 1024)).toFixed(1)} MB). The limit is 50 MB. Compress it or paste a hosted video link instead.`)
+      return
+    }
+    setSubmitError(null)
+    if (videoPreview.startsWith('blob:')) URL.revokeObjectURL(videoPreview)
+    setVideoFile(file)
+    setVideoUrl('')
+    setVideoPreview(URL.createObjectURL(file))
+  }
+
+  const clearVideo = () => {
+    if (videoPreview.startsWith('blob:')) URL.revokeObjectURL(videoPreview)
+    setVideoFile(null)
+    setVideoUrl('')
+    setVideoPreview('')
+    setVideoIsCover(false)
+  }
+
   // Validate form prior to saving
   const validate = (targetStatus: ProjectStatus): string | null => {
     if (!title.trim()) {
@@ -276,7 +360,13 @@ export default function ProjectEditorModal({
       imagesToSave[0].isPrimary = true
     }
 
-    const technologies = technologiesInput
+    if (sectionsLoading) {
+      setSubmitError('Case study sections are still loading. Try again in a moment.')
+      setSubmitting(false)
+      return
+    }
+
+    const tools = toolsInput
       .split(',')
       .map((t) => t.trim())
       .filter(Boolean)
@@ -289,13 +379,34 @@ export default function ProjectEditorModal({
       solution_delivered: solutionDelivered,
       short_description: shortDescription,
       project_url: projectUrl,
-      technologies,
+      technologies: tools, // kept in sync with Tools used (search + preview read it)
       status: targetStatus,
       featured,
       sort_order: Number(sortOrder) || 0,
+      year,
+      role,
+      platform,
+      tools,
+      detailsSupported: Boolean(initialProject && 'year' in initialProject),
+      videoSupported: Boolean(initialProject && 'video_url' in initialProject),
     }
 
+    let uploadedVideoPath = ''
     try {
+      // Video: upload a new file, or keep / replace the link
+      const typedUrl = videoUrl.trim()
+      let finalVideoUrl = typedUrl
+      let finalVideoPath = typedUrl && typedUrl === initialProject?.video_url ? initialProject?.video_storage_path || '' : ''
+      if (videoFile) {
+        const up = await uploadVideoFile(videoFile)
+        finalVideoUrl = up.publicUrl
+        finalVideoPath = up.storagePath
+        uploadedVideoPath = up.storagePath
+      }
+      formData.video_url = finalVideoUrl
+      formData.video_storage_path = finalVideoPath
+      formData.video_is_cover = finalVideoUrl ? videoIsCover : false
+
       if (isEditing && initialProject?.id) {
         const existingImages = (initialProject.images || []).map((img) => ({
           id: img.id,
@@ -307,13 +418,22 @@ export default function ProjectEditorModal({
           imagesToSave,
           existingImages
         )
+        if (sections.length > 0 || hadSections.current) {
+          await saveProjectSections(initialProject.id, sections, previousSectionPaths.current)
+        }
+        const oldVideoPath = initialProject.video_storage_path
+        if (oldVideoPath && oldVideoPath !== finalVideoPath) await deleteStorageFile(oldVideoPath)
       } else {
-        await createProjectWithImages(formData, imagesToSave)
+        const created = await createProjectWithImages(formData, imagesToSave)
+        if (sections.length > 0) {
+          await saveProjectSections(created.id, sections, [])
+        }
       }
 
       onSaved()
     } catch (err: any) {
       console.error('Save failed:', err)
+      if (uploadedVideoPath) await deleteStorageFile(uploadedVideoPath)
       const rawMsg: string = err?.message || ''
       if (
         rawMsg.includes('portfolio_projects_slug_key') ||
@@ -557,24 +677,78 @@ export default function ProjectEditorModal({
               />
             </div>
 
-            {/* Technologies */}
-            <div>
-              <label className="block text-xs font-bold uppercase tracking-[0.1em] text-black mb-1.5">
-                Technologies / Tags (Optional)
-              </label>
-              <input
-                type="text"
-                value={technologiesInput}
-                onChange={(e) => setTechnologiesInput(e.target.value)}
-                placeholder={
-                  isAI
-                    ? "n8n, AI Agents, CRM Automation, PostgreSQL"
-                    : "React, TypeScript, Tailwind CSS, Vite"
-                }
-                className="w-full border border-[#D5D5D5] focus:border-black px-3.5 py-2.5 text-sm outline-none transition-colors"
-              />
-              <p className="text-[11px] text-[#777777] mt-1">Separate tags with commas.</p>
-            </div>
+            {/* Case study details + sections (both categories) */}
+            {(
+              <>
+                <div className="pt-2 border-t border-[#E5E5E5]">
+                  <p className="text-xs font-bold uppercase tracking-[0.1em] text-black">Case Study Details</p>
+                  <p className="text-[11px] text-[#666666] mt-0.5 mb-3">
+                    Shown at the top of the project page when someone clicks &ldquo;View Project&rdquo;.
+                  </p>
+                  <div className="grid sm:grid-cols-3 gap-4">
+                    <div>
+                      <label className="block text-[11px] font-bold uppercase tracking-wider text-black mb-1">Year</label>
+                      <input type="text" value={year} onChange={(e) => setYear(e.target.value)} placeholder="2026"
+                        className="w-full border border-[#D5D5D5] focus:border-black px-3 py-2 text-sm outline-none" />
+                    </div>
+                    <div>
+                      <label className="block text-[11px] font-bold uppercase tracking-wider text-black mb-1">Role</label>
+                      <input type="text" value={role} onChange={(e) => setRole(e.target.value)} placeholder="Designer & Developer"
+                        className="w-full border border-[#D5D5D5] focus:border-black px-3 py-2 text-sm outline-none" />
+                    </div>
+                    <div>
+                      <label htmlFor="platform-select" className="block text-[11px] font-bold uppercase tracking-wider text-black mb-1">
+                        Platform
+                      </label>
+                      <select
+                        id="platform-select"
+                        value={PLATFORM_OPTIONS.includes(platform) ? platform : platform ? OTHER_PLATFORM : ''}
+                        onChange={(e) => setPlatform(e.target.value === OTHER_PLATFORM ? ' ' : e.target.value)}
+                        className="w-full border border-[#D5D5D5] focus:border-black px-3 py-2 text-sm outline-none bg-white cursor-pointer"
+                      >
+                        <option value="">Not set</option>
+                        {PLATFORM_OPTIONS.map((p) => (
+                          <option key={p} value={p}>{p}</option>
+                        ))}
+                        <option value={OTHER_PLATFORM}>Other…</option>
+                      </select>
+                      {platform && !PLATFORM_OPTIONS.includes(platform) && (
+                        <input
+                          type="text"
+                          value={platform.trim() === '' ? '' : platform}
+                          onChange={(e) => setPlatform(e.target.value)}
+                          placeholder="Type the platform"
+                          autoFocus
+                          className="mt-2 w-full border border-[#D5D5D5] focus:border-black px-3 py-2 text-sm outline-none"
+                        />
+                      )}
+                      <p className="text-[11px] text-[#777777] mt-1">
+                        {isAI ? 'What the automation runs for: a web app, a mobile app, a website…' : 'What the project is: a web app, a mobile app, a website…'}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="mt-4">
+                    <label className="block text-[11px] font-bold uppercase tracking-wider text-black mb-1">Tools used</label>
+                    <input type="text" value={toolsInput} onChange={(e) => setToolsInput(e.target.value)}
+                      placeholder={isAI ? "n8n, Webhook, Google Sheets, Gmail" : "Figma, React, Supabase, Claude Code"}
+                      className="w-full border border-[#D5D5D5] focus:border-black px-3 py-2 text-sm outline-none" />
+                    <p className="text-[11px] text-[#777777] mt-1">
+                      Separate with commas. The icon appears automatically for well-known tools (n8n, Figma, React, Google Sheets, Supabase and many more). An icon you upload in the Skills tab takes priority.
+                    </p>
+                  </div>
+                </div>
+
+                {sectionsLoading ? (
+                  <p className="text-xs text-[#777777]">Loading case study sections…</p>
+                ) : (
+                  <SectionsEditor
+                    sections={sections}
+                    onChange={setSections}
+                    onError={(m) => setSubmitError(m)}
+                  />
+                )}
+              </>
+            )}
 
             {/* Sort Order & Featured */}
             <div className="flex flex-wrap items-center gap-6 pt-2 border-t border-[#E5E5E5]">
@@ -598,6 +772,73 @@ export default function ProjectEditorModal({
                   className="w-4 h-4 accent-black"
                 />
                 Feature on Public Portfolio
+              </label>
+            </div>
+
+            {/* Project video */}
+            <div className="pt-2 border-t border-[#E5E5E5]">
+              <p className="text-xs font-bold uppercase tracking-[0.1em] text-black">Project Video (Optional)</p>
+              <p className="text-[11px] text-[#666666] mt-0.5 mb-3 leading-relaxed">
+                Upload a short clip (MP4, WebM or MOV, up to 50 MB) or paste a direct video link. Set it as the cover
+                and it plays by itself, muted and looping, when a visitor scrolls to it.
+              </p>
+
+              {videoPreview && (
+                <video
+                  src={videoPreview}
+                  controls
+                  muted
+                  playsInline
+                  className="w-full max-w-md border border-[#D5D5D5] bg-black mb-3"
+                />
+              )}
+
+              <div className="flex flex-wrap items-center gap-3">
+                <label className="cursor-pointer px-3 py-2 border border-black text-xs font-bold hover:bg-black hover:text-white transition-colors">
+                  {videoPreview ? 'Replace video file' : 'Upload video file'}
+                  <input
+                    type="file"
+                    accept="video/mp4,video/webm,video/quicktime"
+                    className="sr-only"
+                    onChange={(e) => {
+                      pickVideo(e.target.files?.[0])
+                      e.target.value = ''
+                    }}
+                  />
+                </label>
+                {videoPreview && (
+                  <button type="button" onClick={clearVideo} className="text-xs font-bold underline text-red-600">
+                    Remove video
+                  </button>
+                )}
+              </div>
+
+              <div className="mt-3">
+                <label className="block text-[11px] font-bold uppercase tracking-wider text-black mb-1">
+                  Or paste a video link
+                </label>
+                <input
+                  type="url"
+                  value={videoUrl}
+                  onChange={(e) => {
+                    setVideoUrl(e.target.value)
+                    setVideoFile(null)
+                    setVideoPreview(e.target.value.trim())
+                  }}
+                  placeholder="https://.../clip.mp4"
+                  className="w-full border border-[#D5D5D5] focus:border-black px-3 py-2 text-sm outline-none"
+                />
+              </div>
+
+              <label className="mt-3 flex items-center gap-2 text-xs font-bold text-black cursor-pointer select-none">
+                <input
+                  type="checkbox"
+                  checked={videoIsCover}
+                  disabled={!videoPreview}
+                  onChange={(e) => setVideoIsCover(e.target.checked)}
+                  className="w-4 h-4 accent-black"
+                />
+                Use this video as the project cover (autoplays when scrolled into view)
               </label>
             </div>
 
@@ -814,7 +1055,7 @@ export default function ProjectEditorModal({
             solution_delivered: solutionDelivered,
             short_description: shortDescription,
             project_url: projectUrl,
-            technologies: technologiesInput.split(',').map((t) => t.trim()).filter(Boolean),
+            technologies: toolsInput.split(',').map((t) => t.trim()).filter(Boolean),
             featured,
           }}
           images={images}

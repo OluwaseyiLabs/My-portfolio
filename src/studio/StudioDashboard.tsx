@@ -14,12 +14,16 @@ import {
 } from '../lib/supabase'
 import ProjectEditorModal from './ProjectEditorModal'
 import ProjectPreviewModal from './ProjectPreviewModal'
+import SkillsManager from './SkillsManager'
+import SiteContentManager from './SiteContentManager'
+import AnalyticsPanel from './AnalyticsPanel'
 
 export default function StudioDashboard() {
   const { signOut } = useAuth()
 
   // State
-  const [activeView, setActiveView] = useState<'PROJECTS' | 'INQUIRIES'>('PROJECTS')
+  const [activeView, setActiveView] = useState<'PROJECTS' | 'INQUIRIES' | 'SKILLS' | 'CONTENT' | 'ANALYTICS'>('PROJECTS')
+  const [skillCount, setSkillCount] = useState<number | null>(null)
   const [projects, setProjects] = useState<PortfolioProject[]>([])
   const [inquiries, setInquiries] = useState<PortfolioInquiry[]>([])
   const [loading, setLoading] = useState(true)
@@ -200,9 +204,50 @@ export default function StudioDashboard() {
               </span>
             )}
           </button>
+          <button
+            onClick={() => setActiveView('SKILLS')}
+            className={`px-4 py-2 text-xs font-bold uppercase tracking-wider transition-colors ${
+              activeView === 'SKILLS'
+                ? 'bg-black text-white'
+                : 'bg-white text-[#555555] hover:text-black border border-[#E5E5E5]'
+            }`}
+          >
+            Skills{skillCount !== null ? ` (${skillCount})` : ''}
+          </button>
+          <button
+            onClick={() => setActiveView('CONTENT')}
+            className={`px-4 py-2 text-xs font-bold uppercase tracking-wider transition-colors ${
+              activeView === 'CONTENT'
+                ? 'bg-black text-white'
+                : 'bg-white text-[#555555] hover:text-black border border-[#E5E5E5]'
+            }`}
+          >
+            Site Content
+          </button>
+          <button
+            onClick={() => setActiveView('ANALYTICS')}
+            className={`px-4 py-2 text-xs font-bold uppercase tracking-wider transition-colors ${
+              activeView === 'ANALYTICS'
+                ? 'bg-black text-white'
+                : 'bg-white text-[#555555] hover:text-black border border-[#E5E5E5]'
+            }`}
+          >
+            Analytics
+          </button>
         </div>
 
-        {activeView === 'INQUIRIES' ? (
+        {activeView === 'ANALYTICS' ? (
+          <AnalyticsPanel
+            onOpenInquiries={() => {
+              setActiveView('INQUIRIES')
+              loadInquiries()
+            }}
+          />
+        ) : activeView === 'CONTENT' ? (
+          <SiteContentManager />
+        ) : activeView === 'SKILLS' ? (
+          <SkillsManager onCountChange={setSkillCount} />
+        ) : activeView === 'INQUIRIES' ? (
           <div>
             {/* Inquiries Header */}
             <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-6 pb-4 border-b border-black">

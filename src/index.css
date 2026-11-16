@@ -1,8 +1,44 @@
 @import "tailwindcss";
 
+/* Class-based dark mode driven by <html data-theme="dark"> */
+@custom-variant dark (&:where([data-theme=dark], [data-theme=dark] *));
+
+/* Semantic monochrome tokens. Utilities: bg-bg, text-fg, text-muted, border-line, bg-surface ... */
+@theme inline {
+  --color-bg: var(--c-bg);
+  --color-fg: var(--c-fg);
+  --color-muted: var(--c-muted);
+  --color-faint: var(--c-faint);
+  --color-line: var(--c-line);
+  --color-line-strong: var(--c-line-strong);
+  --color-surface: var(--c-surface);
+  --color-ok: var(--c-ok);
+}
+
 @layer base {
   :root {
     --font-sans: 'Inter', 'Helvetica Neue', Arial, sans-serif;
+    --c-bg: #ffffff;
+    --c-fg: #000000;
+    --c-muted: #555555;
+    --c-faint: #aaaaaa;
+    --c-line: #e5e5e5;
+    --c-line-strong: #cccccc;
+    --c-surface: #f5f5f5;
+    --c-ok: #15803d; /* availability status green, readable on white */
+    color-scheme: light;
+  }
+
+  [data-theme='dark'] {
+    --c-bg: #141414;
+    --c-fg: #ffffff;
+    --c-muted: #a3a3a3;
+    --c-faint: #777777;
+    --c-line: #2a2a2a;
+    --c-line-strong: #3a3a3a;
+    --c-surface: #1f1f1f;
+    --c-ok: #4ade80; /* availability status green, readable on dark */
+    color-scheme: dark;
   }
 
   * {
@@ -10,13 +46,22 @@
   }
 
   html {
-    scroll-behavior: smooth;
+    -webkit-text-size-adjust: 100%;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  section[id] {
+    scroll-margin-top: 4rem;
+  }
+
+  a, button, [role='button'], [role='switch'], input, textarea, select, summary {
+    touch-action: manipulation;
   }
 
   body {
     font-family: var(--font-sans);
-    background-color: #ffffff;
-    color: #000000;
+    background-color: var(--c-bg);
+    color: var(--c-fg);
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }
@@ -35,3 +80,242 @@
   }
 }
 
+/* Scroll reveal (see components/Reveal.tsx) */
+.reveal {
+  opacity: 0;
+  transform: translateY(16px);
+  transition:
+    opacity 520ms cubic-bezier(0.22, 1, 0.36, 1),
+    transform 520ms cubic-bezier(0.22, 1, 0.36, 1);
+  transition-delay: var(--reveal-delay, 0ms);
+}
+.reveal.is-visible {
+  opacity: 1;
+  transform: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  .reveal {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+}
+
+/* Horizontal project carousel (components/WebDesignSection.tsx) */
+.proj-track {
+  --card-w: min(86vw, 42rem);
+  padding-inline: calc((100% - var(--card-w)) / 2);
+  scroll-behavior: auto;
+}
+@media (min-width: 640px) {
+  .proj-track {
+    --card-w: min(60vw, 42rem);
+  }
+}
+@media (min-width: 768px) {
+  .proj-track {
+    --card-w: min(52vw, 42rem);
+  }
+}
+.proj-card {
+  width: var(--card-w);
+}
+.no-scrollbar {
+  scrollbar-width: none;
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+/* Button that reveals an icon sliding in from the right on hover (Let's Talk, Send Message) */
+.btn-slide {
+  position: relative;
+  overflow: hidden;
+}
+.btn-slide__label {
+  display: inline-block;
+  transition: transform 300ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+.btn-slide__icon {
+  position: absolute;
+  top: 50%;
+  right: 0.85rem;
+  display: flex;
+  opacity: 0;
+  transform: translate(160%, -50%);
+  transition:
+    transform 300ms cubic-bezier(0.22, 1, 0.36, 1),
+    opacity 200ms ease;
+  pointer-events: none;
+}
+.btn-slide:hover:not(:disabled) .btn-slide__label,
+.btn-slide:focus-visible .btn-slide__label {
+  transform: translateX(-0.6rem);
+}
+.btn-slide:hover:not(:disabled) .btn-slide__icon,
+.btn-slide:focus-visible .btn-slide__icon {
+  opacity: 1;
+  transform: translate(0, -50%);
+}
+
+/* "SENT" stamp on the contact form confirmation */
+@keyframes stamp-in {
+  0%   { opacity: 0; transform: translate(60px, -90px) scale(2.8) rotate(-600deg); }
+  50%  { opacity: 1; transform: translate(0, 0) scale(1.1) rotate(-20deg); }
+  64%  { transform: scale(0.88) rotate(-12deg); }
+  80%  { transform: scale(1.04) rotate(-12deg); }
+  100% { opacity: 1; transform: scale(1) rotate(-12deg); }
+}
+@keyframes stamp-ring {
+  0%, 62% { opacity: 0; transform: scale(0.85); }
+  66%     { opacity: 0.55; }
+  100%    { opacity: 0; transform: scale(1.7); }
+}
+@keyframes box-thud {
+  0%, 62%, 100% { transform: translateY(0); }
+  67%           { transform: translateY(4px); }
+  75%           { transform: translateY(-1.5px); }
+}
+.stamp {
+  animation: stamp-in 1.4s cubic-bezier(0.22, 0.8, 0.3, 1) both;
+}
+.stamp-ring {
+  animation: stamp-ring 1.4s ease-out both;
+}
+.sent-box {
+  animation: box-thud 1.4s ease-out both;
+}
+
+/* Hero: system -> arrow -> business animation, top to bottom (components/SystemAnimation.tsx) */
+.sys-gear { transform-box: fill-box; transform-origin: center; }
+.sys-gear-a { animation: sys-spin-a 6s infinite, sys-power 6s infinite; }
+.sys-gear-b { animation: sys-spin-b 6s infinite, sys-power 6s infinite; }
+.sys-line { stroke-dasharray: 56; animation: sys-line 6s ease-in-out infinite; }
+.sys-head { animation: sys-head 6s ease-in-out infinite; }
+.sys-dot { animation: sys-dot 6s ease-in-out infinite; }
+.sys-building { transform-box: fill-box; transform-origin: center; animation: sys-pop 6s ease-in-out infinite; }
+.sys-win { animation: sys-win 6s ease-in-out infinite; }
+.sys-door { animation: sys-door 6s ease-in-out infinite; }
+
+/* gears spin at full speed, then wind down to a stop once the business is reached.
+   540deg is a whole number of teeth for both gears, so the restart is seamless. */
+@keyframes sys-spin-a {
+  0%   { transform: rotate(0deg); animation-timing-function: linear; }
+  45%  { transform: rotate(450deg); animation-timing-function: ease-out; }
+  60%, 100% { transform: rotate(540deg); }
+}
+@keyframes sys-spin-b {
+  0%   { transform: rotate(0deg); animation-timing-function: linear; }
+  45%  { transform: rotate(-450deg); animation-timing-function: ease-out; }
+  60%, 100% { transform: rotate(-540deg); }
+}
+/* the system switches off (dims) when the business lights up, and back on for the next run */
+@keyframes sys-power {
+  0%, 46% { opacity: 1; }
+  60%, 92% { opacity: 0.22; }
+  99%, 100% { opacity: 1; }
+}
+@keyframes sys-line {
+  0%, 26% { stroke-dashoffset: 56; opacity: 1; }
+  46%, 90% { stroke-dashoffset: 0; opacity: 1; }
+  97%, 100% { stroke-dashoffset: 0; opacity: 0; }
+}
+@keyframes sys-head {
+  0%, 42% { opacity: 0; }
+  47%, 90% { opacity: 1; }
+  97%, 100% { opacity: 0; }
+}
+@keyframes sys-dot {
+  0%, 24% { transform: translateY(0); opacity: 0; }
+  28% { opacity: 1; }
+  44% { transform: translateY(54px); opacity: 1; }
+  48%, 100% { transform: translateY(54px); opacity: 0; }
+}
+@keyframes sys-pop {
+  0%, 44% { transform: scale(1); }
+  50% { transform: scale(1.06); }
+  57%, 100% { transform: scale(1); }
+}
+@keyframes sys-win {
+  0%, 46% { opacity: 0.12; }
+  54%, 90% { opacity: 1; }
+  97%, 100% { opacity: 0.12; }
+}
+@keyframes sys-door {
+  0%, 46% { opacity: 0.35; }
+  54%, 90% { opacity: 1; }
+  97%, 100% { opacity: 0.35; }
+}
+
+/* No motion: show the finished picture (arrow drawn, building lit) instead of an animation */
+@media (prefers-reduced-motion: reduce) {
+  .sys-gear, .sys-line, .sys-head, .sys-dot, .sys-building, .sys-win, .sys-door { animation: none !important; }
+  .sys-line { stroke-dashoffset: 0; }
+  .sys-dot { opacity: 0; }
+}
+
+/* Skills: a continuous attention bounce ("see me") while they are on screen.
+   Each cycle is a quick set of shrinking hops followed by a short rest, then it repeats. */
+@keyframes skill-bounce {
+  0%, 40%, 100% { transform: translateY(0); }
+  7%  { transform: translateY(-18px); }
+  14% { transform: translateY(0); }
+  20% { transform: translateY(-9px); }
+  26% { transform: translateY(0); }
+  31% { transform: translateY(-3px); }
+  36% { transform: translateY(0); }
+}
+.skill-bounce {
+  animation: skill-bounce 3s cubic-bezier(0.3, 0.7, 0.4, 1) infinite;
+}
+.skill-bounce:hover {
+  animation-play-state: paused;
+}
+@media (prefers-reduced-motion: reduce) {
+  .skill-bounce { animation: none; }
+}
+
+/* Services heading: each line enters fast and hits the screen */
+.slam-line { display: block; opacity: 0; transform-origin: left center; }
+.slam-line.is-slam { animation: slam-in 0.5s both; }
+.slam-line-2.is-slam { animation-delay: 0.32s; }
+@keyframes slam-in {
+  0%   { opacity: 0; transform: translateY(-70px) scale(2.3); animation-timing-function: cubic-bezier(0.6, 0, 1, 0.7); }
+  55%  { opacity: 1; transform: translateY(0) scale(0.94); animation-timing-function: ease-out; }
+  75%  { transform: scale(1.025); }
+  100% { opacity: 1; transform: scale(1); }
+}
+/* the whole heading jolts a little as each line lands (at ~0.28s and ~0.6s) */
+.slam-heading.is-slam { animation: slam-jolt 0.9s both; }
+@keyframes slam-jolt {
+  0%, 28% { transform: translateY(0); }
+  31% { transform: translateY(5px); }
+  36% { transform: translateY(-2px); }
+  40%, 64% { transform: translateY(0); }
+  67% { transform: translateY(5px); }
+  72% { transform: translateY(-2px); }
+  76%, 100% { transform: translateY(0); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .slam-line { opacity: 1; }
+  .slam-line.is-slam, .slam-heading.is-slam { animation: none; }
+}
+
+/* Don't animate (or repaint) the hero system drawing while it is scrolled out of view */
+.sys-paused .sys-gear,
+.sys-paused .sys-line,
+.sys-paused .sys-head,
+.sys-paused .sys-dot,
+.sys-paused .sys-building,
+.sys-paused .sys-win,
+.sys-paused .sys-door {
+  animation-play-state: paused;
+}
+
+/* Menus fade and settle in instead of appearing */
+@keyframes menu-in {
+  from { opacity: 0; transform: translateY(-8px) scale(0.98); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+.menu-in { animation: menu-in 0.22s cubic-bezier(0.22, 1, 0.36, 1) both; transform-origin: top center; }
+@media (prefers-reduced-motion: reduce) { .menu-in { animation: none; } }
