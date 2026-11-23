@@ -472,6 +472,8 @@ export interface PortfolioInquiry {
   project_budget?: string | null
   interests?: string[] | null
   extra_info?: string | null
+  /** set when you mark it as read in the Studio; empty means new */
+  read_at?: string | null
   webhook_sent: boolean
   webhook_response?: string
   created_at: string
@@ -615,6 +617,22 @@ export async function fetchInquiries(): Promise<PortfolioInquiry[]> {
   return data || []
 }
 
+/** Marks the given enquiries as read (Studio, owner only). Needs migration 010. */
+export async function markInquiriesRead(ids: string[]): Promise<void> {
+  if (ids.length === 0) return
+  const { error } = await supabase
+    .from('portfolio_inquiries')
+    .update({ read_at: new Date().toISOString() })
+    .in('id', ids)
+    .is('read_at', null)
+  if (error) {
+    throw new Error(
+      /read_at|schema cache/i.test(error.message)
+        ? 'The read-status column is missing. Run supabase/migrations/010_inquiry_read_status.sql in the Supabase SQL editor.'
+        : error.message,
+    )
+  }
+}
 
 // ── Workflow errors (n8n failures reported into the Studio error dashboard) ──────────────────────────────
 

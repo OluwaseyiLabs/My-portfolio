@@ -10,6 +10,7 @@ import {
   deleteProjectPermanently,
   updateProjectStatus,
   fetchInquiries,
+  markInquiriesRead,
   countOpenWorkflowErrors,
   type PortfolioInquiry,
 } from '../lib/supabase'
@@ -33,6 +34,8 @@ export default function StudioDashboard() {
   const [loading, setLoading] = useState(true)
   const [loadingInquiries, setLoadingInquiries] = useState(false)
   const [expandedInquiry, setExpandedInquiry] = useState<string | null>(null)
+  const [markingRead, setMarkingRead] = useState(false)
+  const [inquiryNotice, setInquiryNotice] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
 
   // Filters & Search
@@ -137,6 +140,21 @@ export default function StudioDashboard() {
     }
   }
 
+  const unreadInquiryIds = useMemo(() => inquiries.filter((i) => !i.read_at).map((i) => i.id), [inquiries])
+
+  const handleMarkAllRead = async () => {
+    try {
+      setMarkingRead(true)
+      setInquiryNotice(null)
+      await markInquiriesRead(unreadInquiryIds)
+      await loadInquiries()
+    } catch (err) {
+      setInquiryNotice(err instanceof Error ? err.message : 'Could not mark as read.')
+    } finally {
+      setMarkingRead(false)
+    }
+  }
+
   return (
     <div className="studio-root min-h-dvh bg-bg text-fg flex flex-col">
       {/* ── Top Header ── */}
@@ -201,13 +219,13 @@ export default function StudioDashboard() {
             }`}
           >
             <span>Contact Inquiries</span>
-            {inquiries.length > 0 && (
+            {unreadInquiryIds.length > 0 && (
               <span
                 className={`px-1.5 py-0.5 text-[10px] font-black rounded-full ${
                   activeView === 'INQUIRIES' ? 'bg-bg text-fg' : 'bg-fg text-bg'
                 }`}
               >
-                {inquiries.length}
+                {unreadInquiryIds.length}
               </span>
             )}
           </button>
@@ -287,6 +305,14 @@ export default function StudioDashboard() {
                   Contact Form Inquiries ({inquiries.length})
                 </h1>
               </div>
+              <div className="flex flex-wrap gap-2 self-start sm:self-auto">
+              <button
+                onClick={handleMarkAllRead}
+                disabled={markingRead || unreadInquiryIds.length === 0}
+                className="px-4 py-2 border border-line text-xs font-bold uppercase tracking-wider hover:border-fg transition-colors disabled:opacity-40 disabled:hover:border-line"
+              >
+                {markingRead ? 'Marking…' : unreadInquiryIds.length > 0 ? `Mark all as read (${unreadInquiryIds.length})` : 'All read'}
+              </button>
               <button
                 onClick={loadInquiries}
                 disabled={loadingInquiries}
@@ -294,7 +320,14 @@ export default function StudioDashboard() {
               >
                 {loadingInquiries ? 'Refreshing…' : '↻ Refresh Inquiries'}
               </button>
+              </div>
             </div>
+
+            {inquiryNotice && (
+              <div role="alert" className="mb-6 p-4 border border-fg text-xs font-bold text-fg">
+                {inquiryNotice}
+              </div>
+            )}
 
             {loadingInquiries && inquiries.length === 0 ? (
               <div className="p-16 border border-line text-center text-xs font-bold text-muted">
@@ -343,6 +376,11 @@ export default function StudioDashboard() {
                             </td>
                             <td className="py-3 px-4 whitespace-nowrap">
                               <span className="font-bold text-fg">{inq.name}</span>
+                              {!inq.read_at && (
+                                <span className="ml-2 px-1.5 py-0.5 text-[9px] font-black uppercase tracking-wider bg-fg text-bg align-middle">
+                                  New
+                                </span>
+                              )}
                               {inq.company && <span className="block text-muted">{inq.company}</span>}
                             </td>
                             <td className="py-3 px-4 whitespace-nowrap">
