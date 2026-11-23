@@ -429,9 +429,22 @@ export async function updateProjectStatus(projectId: string, newStatus: ProjectS
 }
 
 export interface InquiryPayload {
-  name: string
+  firstName: string
+  lastName: string
   email: string
+  company: string
+  /** optional; empty string when not given */
+  website: string
+  role: string
+  companySize: string
+  annualRevenue: string
+  projectBudget: string
+  /** "How can I help?" */
   message: string
+  /** what they hope to improve (one or more) */
+  interests: string[]
+  /** optional extra context */
+  extra: string
 }
 
 export interface InquiryResult {
@@ -449,6 +462,16 @@ export interface PortfolioInquiry {
   email: string
   message: string
   status: string
+  first_name?: string | null
+  last_name?: string | null
+  company?: string | null
+  website?: string | null
+  role?: string | null
+  company_size?: string | null
+  annual_revenue?: string | null
+  project_budget?: string | null
+  interests?: string[] | null
+  extra_info?: string | null
   webhook_sent: boolean
   webhook_response?: string
   created_at: string
@@ -466,29 +489,53 @@ export async function submitInquiry(
   hooks?: { onSaved?: () => void },
 ): Promise<InquiryResult> {
   const payload: InquiryPayload = {
-    name: sanitizeText(rawPayload.name, LIMITS.name),
+    firstName: sanitizeText(rawPayload.firstName, LIMITS.firstName),
+    lastName: sanitizeText(rawPayload.lastName, LIMITS.lastName),
     email: sanitizeText(rawPayload.email, LIMITS.email).toLowerCase(),
+    company: sanitizeText(rawPayload.company, LIMITS.company),
+    website: sanitizeText(rawPayload.website, LIMITS.website).replace(/\s+/g, ''),
+    role: rawPayload.role,
+    companySize: rawPayload.companySize,
+    annualRevenue: rawPayload.annualRevenue,
+    projectBudget: rawPayload.projectBudget,
     message: sanitizeText(rawPayload.message, LIMITS.message, true),
+    interests: rawPayload.interests,
+    extra: sanitizeText(rawPayload.extra, LIMITS.extra, true),
   }
-  const submittedAt = new Date().toISOString()
   let savedToDb = false
   let inquiryId: string | null = null
-  let serverFunctionMissing = false
 
-  // 1. Rate-limited, validated save (server side)
+  // 1. Rate-limited, validated save (server side). Every dropdown and checkbox is checked again there.
   try {
-    const { data, error } = await supabase.rpc('portfolio_submit_inquiry', {
-      p_name: payload.name,
+    const { data, error } = await supabase.rpc('portfolio_submit_inquiry_v2', {
+      p_first_name: payload.firstName,
+      p_last_name: payload.lastName,
       p_email: payload.email,
+      p_company: payload.company,
+      p_website: payload.website,
+      p_role: payload.role,
+      p_company_size: payload.companySize,
+      p_annual_revenue: payload.annualRevenue,
+      p_project_budget: payload.projectBudget,
       p_message: payload.message,
-      p_website: '',
+      p_interests: payload.interests,
+      p_extra: payload.extra,
+      p_hp: '',
     })
 
     if (error) {
-      // Before the database update is applied the function does not exist yet
-      serverFunctionMissing = error.code === 'PGRST202' || /could not find the function|does not exist/i.test(error.message)
-      if (!serverFunctionMissing) console.warn('Inquiry save error:', error.message)
-    } else if (data?.ok) {
+      console.warn('Inquiry save error:', error.message)
+      const missing = error.code === 'PGRST202' || /could not find the function|does not exist/i.test(error.message)
+      return {
+        success: false,
+        savedToDb: false,
+        webhookDelivered: false,
+        webhookError: missing
+          ? 'The enquiry form is being updated. Please try again shortly, or email me directly.'
+          : 'Your message could not be sent. Please try again.',
+      }
+    }
+    if (data?.ok) {
       savedToDb = true
       inquiryId = data.id ?? null
       hooks?.onSaved?.()
@@ -505,33 +552,12 @@ export async function submitInquiry(
       return { success: false, savedToDb: false, webhookDelivered: false, webhookError: data?.message || 'Your message could not be sent.' }
     }
   } catch (dbErr) {
-    console.warn('Database save skipped:', dbErr)
-  }
-
-  // Transitional path: only used while the database update has not been applied yet
-  if (serverFunctionMissing) {
-    try {
-      const { data, error } = await supabase
-        .from('portfolio_inquiries')
-        .insert([{ ...payload, webhook_sent: false, created_at: submittedAt }])
-        .select('id')
-        .single()
-      if (!error && data) {
-        savedToDb = true
-        inquiryId = data.id
-        hooks?.onSaved?.()
-      }
-    } catch {
-      /* fall through to the webhook */
-    }
+    console.warn('Database save failed:', dbErr)
+    return { success: false, savedToDb: false, webhookDelivered: false, webhookError: 'Something went wrong. Please try again.' }
   }
 
   // 2. Tell n8n (same-origin proxy: /api/n8n/* -> your n8n webhook)
-  const bodyData = JSON.stringify(
-    serverFunctionMissing
-      ? { ...payload, submittedAt, source: 'portfolio_contact_form' } // old workflow
-      : { inquiry_id: inquiryId, source: 'portfolio_contact_form' },
-  )
+  const bodyData = JSON.stringify({ inquiry_id: inquiryId, source: 'portfolio_contact_form' })
 
   let webhookDelivered = false
   let rejectedByWorkflow = false
@@ -562,18 +588,6 @@ export async function submitInquiry(
     }
   } catch (err: any) {
     lastWebhookError = err?.message || String(err)
-  }
-
-  // 3. Old transitional flow only: record delivery status (the new flow does this on the server)
-  if (serverFunctionMissing && inquiryId) {
-    try {
-      await supabase
-        .from('portfolio_inquiries')
-        .update({ webhook_sent: webhookDelivered, webhook_response: webhookDelivered ? 'OK' : lastWebhookError.slice(0, 500) })
-        .eq('id', inquiryId)
-    } catch {
-      /* non-critical */
-    }
   }
 
   return {

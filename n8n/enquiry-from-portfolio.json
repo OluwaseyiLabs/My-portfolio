@@ -1,7 +1,21 @@
 {
   "name": "Enquiry from Portfolio",
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "tags": [],
   "nodes": [
     {
+      "id": "03d580ac-d0c3-434c-a4d3-f23391a46bc7",
+      "name": "Webhook",
+      "webhookId": "34de77a9-bb6f-45f0-b7c8-17fea72e2af1",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.2,
+      "position": [
+        -1504,
+        -720
+      ],
       "parameters": {
         "httpMethod": "POST",
         "path": "portfolio-request",
@@ -9,18 +23,17 @@
         "options": {
           "allowedOrigins": "*"
         }
-      },
-      "id": "ffffd601-2d4f-41e1-9d8b-e052406ff40d",
-      "name": "Webhook",
-      "type": "n8n-nodes-base.webhook",
-      "typeVersion": 2.2,
-      "position": [
-        0,
-        0
-      ],
-      "webhookId": "34de77a9-bb6f-45f0-b7c8-17fea72e2af1"
+      }
     },
     {
+      "id": "cb90a6d1-248f-4a75-af7d-74a6d3288542",
+      "name": "Read request",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        -1280,
+        -720
+      ],
       "parameters": {
         "assignments": {
           "assignments": [
@@ -39,17 +52,17 @@
           ]
         },
         "options": {}
-      },
-      "id": "33e15234-a28f-43c1-96db-fb2b8653af5d",
-      "name": "Read request",
-      "type": "n8n-nodes-base.set",
-      "typeVersion": 3.5,
-      "position": [
-        224,
-        0
-      ]
+      }
     },
     {
+      "id": "636f0cfd-f0da-4867-9a66-98eb96984bda",
+      "name": "Looks like an id?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -1056,
+        -720
+      ],
       "parameters": {
         "conditions": {
           "options": {
@@ -73,17 +86,19 @@
           "combinator": "and"
         },
         "options": {}
-      },
-      "id": "4e29ffd1-1d25-4cbb-9b7b-482e4f5d5d4f",
-      "name": "Looks like an id?",
-      "type": "n8n-nodes-base.if",
-      "typeVersion": 2.2,
-      "position": [
-        448,
-        0
-      ]
+      }
     },
     {
+      "id": "b9b2428a-8362-4902-9934-764e2b5389f6",
+      "name": "Claim inquiry",
+      "notes": "Calls the database function that hands this enquiry over once. Set the URL to your Supabase project, and attach a Header Auth credential: name 'apikey', value = your Supabase anon key.",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "onError": "continueErrorOutput",
+      "position": [
+        -832,
+        -816
+      ],
       "parameters": {
         "method": "POST",
         "url": "https://YOUR-PROJECT-REF.supabase.co/rest/v1/rpc/portfolio_claim_inquiry",
@@ -94,24 +109,22 @@
         "jsonBody": "={{ JSON.stringify({ p_id: $json.inquiry_id }) }}",
         "options": {}
       },
-      "id": "04e631ad-0c64-4eb3-8d94-ec3e5b1c63cf",
-      "name": "Claim inquiry",
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.2,
-      "position": [
-        672,
-        -112
-      ],
       "credentials": {
         "httpHeaderAuth": {
           "id": "REPLACE_WITH_SUPABASE_APIKEY_CREDENTIAL",
           "name": "Supabase apikey header"
         }
-      },
-      "onError": "continueErrorOutput",
-      "notes": "Calls the database function that hands this enquiry over once. Set the URL to your Supabase project, and attach a Header Auth credential: name 'apikey', value = your Supabase anon key."
+      }
     },
     {
+      "id": "0d2005b8-bc7d-4d9c-885a-53c399262332",
+      "name": "Found?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -608,
+        -896
+      ],
       "parameters": {
         "conditions": {
           "options": {
@@ -135,17 +148,17 @@
           "combinator": "and"
         },
         "options": {}
-      },
-      "id": "3f28747f-f729-4886-b310-160f11e1bc7d",
-      "name": "Found?",
-      "type": "n8n-nodes-base.if",
-      "typeVersion": 2.2,
-      "position": [
-        896,
-        -112
-      ]
+      }
     },
     {
+      "id": "c39ba928-0541-43a7-867f-98e4702941c5",
+      "name": "Prepare",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        -384,
+        -992
+      ],
       "parameters": {
         "assignments": {
           "assignments": [
@@ -172,231 +185,283 @@
               "name": "timestamp",
               "type": "string",
               "value": "={{ DateTime.fromISO(String($json.created_at), { setZone: true }).isValid ? DateTime.fromISO(String($json.created_at), { setZone: true }).setZone('Africa/Lagos').toFormat('dd/MM/yyyy HH:mm:ss') : $now.setZone('Africa/Lagos').toFormat('dd/MM/yyyy HH:mm:ss') }}"
+            },
+            {
+              "id": "fcd72a3b-d442-4e3c-90aa-ec97c06683f7",
+              "name": "first_name",
+              "type": "string",
+              "value": "={{ $json.first_name ?? '' }}"
+            },
+            {
+              "id": "773b5978-e4d4-490d-bccf-46fa77aaf96d",
+              "name": "last_name",
+              "type": "string",
+              "value": "={{ $json.last_name ?? '' }}"
+            },
+            {
+              "id": "4137bc5b-c907-4e9c-8e10-bcff96a2185d",
+              "name": "company",
+              "type": "string",
+              "value": "={{ $json.company ?? '' }}"
+            },
+            {
+              "id": "105046ca-a186-4bab-b665-fabe6c3c9b72",
+              "name": "website",
+              "type": "string",
+              "value": "={{ $json.website ?? '' }}"
+            },
+            {
+              "id": "3410c1b2-f72f-47d0-9eec-761c14cf93d3",
+              "name": "role",
+              "type": "string",
+              "value": "={{ $json.role ?? '' }}"
+            },
+            {
+              "id": "e3b15515-3d31-4c75-80bc-fae1d0641ad5",
+              "name": "company_size",
+              "type": "string",
+              "value": "={{ $json.company_size ?? '' }}"
+            },
+            {
+              "id": "aedb042a-bc7e-4d4a-924d-705569fcbece",
+              "name": "annual_revenue",
+              "type": "string",
+              "value": "={{ $json.annual_revenue ?? '' }}"
+            },
+            {
+              "id": "3dc26028-bbc7-4ac6-b0d7-90517ee81082",
+              "name": "project_budget",
+              "type": "string",
+              "value": "={{ $json.project_budget ?? '' }}"
+            },
+            {
+              "id": "1a10f6f9-f053-4d86-912b-655cb2cc1542",
+              "name": "interests",
+              "type": "string",
+              "value": "={{ Array.isArray($json.interests) ? $json.interests.join(', ') : '' }}"
+            },
+            {
+              "id": "389c04b3-319d-4588-bf38-0f01feaa8db8",
+              "name": "extra_info",
+              "type": "string",
+              "value": "={{ $json.extra_info ?? '' }}"
             }
           ]
         },
         "options": {}
-      },
-      "id": "3d66f3ec-7945-4991-a6ff-9dd5e82c914b",
-      "name": "Prepare",
-      "type": "n8n-nodes-base.set",
-      "typeVersion": 3.5,
-      "position": [
-        1120,
-        -224
-      ]
+      }
     },
     {
-      "parameters": {
-        "sendTo": "oluwaseyidavid406@gmail.com",
-        "subject": "={{ 'New enquiry from ' + $json.name + ' (Portfolio)' }}",
-        "message": "={{ 'Name: ' + $json.name + '\\nEmail: ' + $json.email + '\\nReceived: ' + $json.timestamp + ' (Lagos time)\\nSource: portfolio_contact_form\\n\\nMessage:\\n' + $json.message }}",
-        "options": {
-          "appendAttribution": false,
-          "replyTo": "={{ $json.email }}"
-        }
-      },
-      "id": "04961524-7e91-4a08-b830-d7268e84c8fa",
-      "name": "Email to Oluwaseyi",
-      "type": "n8n-nodes-base.gmail",
-      "typeVersion": 2.2,
-      "position": [
-        1344,
-        -224
-      ],
-      "webhookId": "1cc895c3-788a-4e46-b2d9-a469a0428a0a",
-      "credentials": {
-        "gmailOAuth2": {
-          "id": "1CPI3z6ICJYKdvjC",
-          "name": "Gmail account 2"
-        }
-      },
-      "onError": "continueErrorOutput"
-    },
-    {
-      "parameters": {
-        "sendTo": "={{ $('Prepare').item.json.email }}",
-        "subject": "Thanks for reaching out",
-        "message": "={{ 'Hi ' + $('Prepare').item.json.name + ',\\n\\nThank you for reaching out. I have received your message and I will be in touch shortly.\\n\\nYour message:\\n' + $('Prepare').item.json.message + '\\n\\nOluwaseyi' }}",
-        "options": {
-          "appendAttribution": false,
-          "senderName": "Oluwaseyi"
-        }
-      },
-      "id": "c4ed0f93-e04f-4e54-90ab-bf1a37842103",
-      "name": "Confirmation to client",
-      "type": "n8n-nodes-base.gmail",
-      "typeVersion": 2.2,
-      "position": [
-        1568,
-        -224
-      ],
-      "webhookId": "ed070ba8-5b0b-45f8-ad7c-945b2e650d7b",
-      "credentials": {
-        "gmailOAuth2": {
-          "id": "1CPI3z6ICJYKdvjC",
-          "name": "Gmail account 2"
-        }
-      },
-      "onError": "continueErrorOutput"
-    },
-    {
-      "parameters": {
-        "respondWith": "json",
-        "responseBody": "={{ { \"success\": true, \"message\": \"Thank you for reaching out, I will be in touch shortly.\" } }}",
-        "options": {
-          "responseCode": 200
-        }
-      },
-      "id": "cb538956-cda0-4796-8e22-8e27b7c9364f",
-      "name": "Reply OK",
+      "id": "b0e56e3e-d70b-45f0-9859-a669328445e2",
+      "name": "Reply not found",
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1.4,
       "position": [
-        1792,
-        -224
-      ]
-    },
-    {
-      "parameters": {
-        "respondWith": "json",
-        "responseBody": "={{ { \"success\": false, \"message\": \"This enquiry could not be processed. Please try again.\" } }}",
-        "options": {
-          "responseCode": 400
-        }
-      },
-      "id": "bfbf2a7f-3596-47bf-a7da-f1c411f9af1e",
-      "name": "Reply invalid",
-      "type": "n8n-nodes-base.respondToWebhook",
-      "typeVersion": 1.4,
-      "position": [
-        672,
-        128
-      ]
-    },
-    {
+        -384,
+        -800
+      ],
       "parameters": {
         "respondWith": "json",
         "responseBody": "={{ { \"success\": false, \"message\": \"This enquiry was not found or has already been processed.\" } }}",
         "options": {
           "responseCode": 400
         }
+      }
+    },
+    {
+      "id": "6b90e577-885f-4f49-8ae4-7a1d064e5e0b",
+      "name": "Email to Oluwaseyi1",
+      "webhookId": "1cc895c3-788a-4e46-b2d9-a469a0428a0a",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "onError": "continueErrorOutput",
+      "position": [
+        -160,
+        -992
+      ],
+      "parameters": {
+        "sendTo": "oluwaseyidavid406@gmail.com",
+        "subject": "={{ 'New enquiry from ' + $json.name + ($json.company ? ' (' + $json.company + ')' : ' (Portfolio)') }}",
+        "message": "={{ (() => {\n  const d = $json;\n\n  const esc = (v) => String(v ?? '').replace(/[&<>\"']/g, c => ({\n    '&': '&amp;',\n    '<': '&lt;',\n    '>': '&gt;',\n    '\"': '&quot;',\n    \"'\": '&#39;'\n  }[c]));\n\n  const name = esc(d.name);\n  const email = esc(d.email);\n  const timestamp = esc(d.timestamp);\n  const source = esc('portfolio_contact_form');\n  const message = esc(d.message).replace(/\\r\\n|\\r|\\n/g, '<br>');\n  const year = new Date().getFullYear();\n  const row = (label, valueHtml, last) => `<tr>\n<td style=\"padding:17px 20px;${last ? '' : 'border-bottom:1px solid #E0E0E0;'}\">\n<div style=\"font-size:11px;line-height:1.5;letter-spacing:1.5px;color:#777777;margin-bottom:8px;font-weight:bold;\">${label}</div>\n<div style=\"font-size:15px;line-height:1.6;color:#141414;word-break:break-word;\">${valueHtml}</div>\n</td>\n</tr>`;\n  const link = (href, text) => `<a href=\"${href}\" style=\"color:#141414;text-decoration:underline;word-break:break-word;\">${text}</a>`;\n  const nl = (v) => esc(v).replace(/\\r\\n|\\r|\\n/g, '<br>');\n  const site = /^https?:\\/\\//i.test(String(d.website || '')) ? link(esc(d.website), esc(d.website)) : '';\n  const extraBlock = d.extra_info ? `\n<tr>\n<td bgcolor=\"#FFFFFF\" style=\"padding:0 30px 30px;background-color:#FFFFFF;\">\n<div style=\"font-size:11px;line-height:1.5;letter-spacing:2px;color:#777777;font-weight:bold;margin-bottom:14px;\">\nANYTHING ELSE THEY SHARED\n</div>\n<table role=\"presentation\" width=\"100%\" cellspacing=\"0\" cellpadding=\"0\" border=\"0\" bgcolor=\"#F5F5F5\" style=\"width:100%;background-color:#F5F5F5;border:1px solid #E5E5E5;\">\n<tr>\n<td style=\"padding:22px;font-size:15px;line-height:1.9;color:#333333;word-break:break-word;\">\n${nl(d.extra_info)}\n</td>\n</tr>\n</table>\n</td>\n</tr>` : '';\n  const entries = [\n    ['CLIENT NAME', '<strong>' + name + '</strong>'],\n    ['EMAIL ADDRESS', link('mailto:' + email, email)],\n    d.company && ['COMPANY', esc(d.company)],\n    site && ['COMPANY WEBSITE', site],\n    d.role && ['THEIR ROLE', esc(d.role)],\n    d.company_size && ['COMPANY SIZE', esc(d.company_size)],\n    d.annual_revenue && ['ANNUAL REVENUE', esc(d.annual_revenue)],\n    d.project_budget && ['PROJECT BUDGET', esc(d.project_budget)],\n    d.interests && ['HOPING TO IMPROVE', esc(d.interests)],\n    ['DATE & TIME RECEIVED', timestamp + ' (Lagos time)'],\n    ['SUBMISSION SOURCE', source],\n  ].filter(Boolean);\n  const detailRows = entries.map((e, i) => row(e[0], e[1], i === entries.length - 1)).join('');\n\n  return `<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n<meta charset=\"UTF-8\">\n<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n<meta name=\"color-scheme\" content=\"light\">\n<meta name=\"supported-color-schemes\" content=\"light\">\n<title>New Website Enquiry | Oluwaseyi.</title>\n</head>\n\n<body style=\"margin:0;padding:0;background-color:#FFFFFF;font-family:Arial,Helvetica,sans-serif;color:#141414;\">\n\n<table role=\"presentation\" width=\"100%\" cellspacing=\"0\" cellpadding=\"0\" border=\"0\" bgcolor=\"#FFFFFF\" style=\"width:100%;background-color:#FFFFFF;\">\n<tr>\n<td align=\"center\" style=\"padding:30px 15px;background-color:#FFFFFF;\">\n\n<table role=\"presentation\" width=\"100%\" cellspacing=\"0\" cellpadding=\"0\" border=\"0\" bgcolor=\"#FFFFFF\" style=\"width:100%;max-width:600px;background-color:#FFFFFF;border:1px solid #E5E5E5;\">\n\n<!-- BLACK HEADER -->\n<tr>\n<td align=\"center\" bgcolor=\"#141414\" style=\"padding:38px 25px;text-align:center;background-color:#141414;border-bottom:1px solid #333333;\">\n\n<div style=\"font-size:28px;line-height:1.3;font-weight:700;letter-spacing:-1px;color:#FFFFFF;\">\nOluwaseyi.\n</div>\n\n<div style=\"font-size:10px;line-height:1.8;letter-spacing:2px;text-transform:uppercase;color:#A3A3A3;margin-top:10px;\">\nBuilding systems that work for your business.\n</div>\n\n</td>\n</tr>\n\n<!-- WHITE INTRODUCTION -->\n<tr>\n<td bgcolor=\"#FFFFFF\" style=\"padding:38px 30px 25px;background-color:#FFFFFF;\">\n\n<div style=\"font-size:11px;line-height:1.5;letter-spacing:2px;color:#777777;font-weight:bold;\">\nNEW WEBSITE ENQUIRY\n</div>\n\n<h1 style=\"font-size:28px;line-height:1.3;letter-spacing:-1px;color:#141414;margin:17px 0 12px;font-weight:700;\">\nYou've received a new message.\n</h1>\n\n<p style=\"font-size:15px;line-height:1.9;color:#555555;margin:0;\">\nSomeone has submitted an enquiry through your portfolio website. Here are the details.\n</p>\n\n</td>\n</tr>\n\n<!-- CLIENT DETAILS -->\n<tr>\n<td bgcolor=\"#FFFFFF\" style=\"padding:0 30px 30px;background-color:#FFFFFF;\">\n\n<table role=\"presentation\" width=\"100%\" cellspacing=\"0\" cellpadding=\"0\" border=\"0\" bgcolor=\"#F5F5F5\" style=\"width:100%;background-color:#F5F5F5;border:1px solid #E5E5E5;\">\n${detailRows}\n</table>\n</td>\n</tr>\n\n<!-- CLIENT MESSAGE -->\n<tr>\n<td bgcolor=\"#FFFFFF\" style=\"padding:0 30px 30px;background-color:#FFFFFF;\">\n\n<div style=\"font-size:11px;line-height:1.5;letter-spacing:2px;color:#777777;font-weight:bold;margin-bottom:14px;\">\nHOW CAN I HELP?\n</div>\n\n<table role=\"presentation\" width=\"100%\" cellspacing=\"0\" cellpadding=\"0\" border=\"0\" bgcolor=\"#F5F5F5\" style=\"width:100%;background-color:#F5F5F5;border:1px solid #E5E5E5;\">\n<tr>\n<td style=\"padding:22px;font-size:15px;line-height:1.9;color:#333333;word-break:break-word;\">\n${message}\n</td>\n</tr>\n</table>\n\n</td>\n</tr>\n\n${extraBlock}\n<!-- REPLY BUTTON -->\n<tr>\n<td bgcolor=\"#FFFFFF\" style=\"padding:0 30px 35px;background-color:#FFFFFF;\">\n\n<a href=\"mailto:${email}\" style=\"display:inline-block;background-color:#141414;color:#FFFFFF;text-decoration:none;font-size:15px;font-weight:bold;padding:16px 25px;\">\nReply to client &nbsp; &rarr;\n</a>\n\n</td>\n</tr>\n\n<!-- SIGNATURE: WHITE -->\n<tr>\n<td align=\"center\" bgcolor=\"#FFFFFF\" style=\"padding:27px 25px;background-color:#FFFFFF;border-top:1px solid #E5E5E5;text-align:center;\">\n\n<p style=\"font-size:18px;line-height:1.5;font-weight:700;color:#141414;margin:0 0 7px;\">\nOluwaseyi.\n</p>\n\n<p style=\"font-size:13px;line-height:1.6;letter-spacing:0.3px;color:#777777;margin:0;\">\nAI Automation Specialist &amp; Web Dev\n</p>\n\n</td>\n</tr>\n\n<!-- BLACK COPYRIGHT FOOTER -->\n<tr>\n<td align=\"center\" bgcolor=\"#141414\" style=\"padding:24px 20px;background-color:#141414;text-align:center;\">\n\n<p style=\"font-size:11px;line-height:1.8;color:#FFFFFF;margin:0;\">\nThis notification was automatically generated by your portfolio contact form.\n</p>\n\n<p style=\"font-size:11px;line-height:1.8;color:#A3A3A3;margin:8px 0 0;\">\n&copy; ${year} Oluwaseyi. All rights reserved.\n</p>\n\n</td>\n</tr>\n\n</table>\n</td>\n</tr>\n</table>\n\n</body>\n</html>`;\n})() }}",
+        "options": {
+          "appendAttribution": false,
+          "replyTo": "={{ $json.email }}"
+        }
       },
-      "id": "c7390a14-43f0-4acc-baaa-badf354f0c13",
-      "name": "Reply not found",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "1CPI3z6ICJYKdvjC",
+          "name": "Gmail account 2"
+        }
+      }
+    },
+    {
+      "id": "fe708976-5d80-48e1-94e3-02a5f7fa1f11",
+      "name": "Confirmation to client1",
+      "webhookId": "ed070ba8-5b0b-45f8-ad7c-945b2e650d7b",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "onError": "continueErrorOutput",
+      "position": [
+        64,
+        -1040
+      ],
+      "parameters": {
+        "sendTo": "={{ $('Prepare').item.json.email }}",
+        "subject": "Thanks for reaching out",
+        "message": "={{ (() => {\n  const d = $('Prepare').item.json;\n\n  const esc = (v) => String(v ?? '').replace(/[&<>\"']/g, c => ({\n    '&': '&amp;',\n    '<': '&lt;',\n    '>': '&gt;',\n    '\"': '&quot;',\n    \"'\": '&#39;'\n  }[c]));\n\n  const name = esc(d.first_name || d.name);\n  const message = esc(d.message).replace(/\\r\\n|\\r|\\n/g, '<br>');\n  const year = new Date().getFullYear();\n  const row = (label, valueHtml, last) => `<tr>\n<td style=\"padding:17px 20px;${last ? '' : 'border-bottom:1px solid #E0E0E0;'}\">\n<div style=\"font-size:11px;line-height:1.5;letter-spacing:1.5px;color:#777777;margin-bottom:8px;font-weight:bold;\">${label}</div>\n<div style=\"font-size:15px;line-height:1.6;color:#141414;word-break:break-word;\">${valueHtml}</div>\n</td>\n</tr>`;\n  const link = (href, text) => `<a href=\"${href}\" style=\"color:#141414;text-decoration:underline;word-break:break-word;\">${text}</a>`;\n  const nl = (v) => esc(v).replace(/\\r\\n|\\r|\\n/g, '<br>');\n  const site = /^https?:\\/\\//i.test(String(d.website || '')) ? link(esc(d.website), esc(d.website)) : '';\n  const extraBlock = d.extra_info ? `\n<tr>\n<td bgcolor=\"#FFFFFF\" style=\"padding:0 30px 30px;background-color:#FFFFFF;\">\n<div style=\"font-size:11px;line-height:1.5;letter-spacing:2px;color:#777777;font-weight:bold;margin-bottom:14px;\">\nANYTHING ELSE YOU SHARED\n</div>\n<table role=\"presentation\" width=\"100%\" cellspacing=\"0\" cellpadding=\"0\" border=\"0\" bgcolor=\"#F5F5F5\" style=\"width:100%;background-color:#F5F5F5;border:1px solid #E5E5E5;\">\n<tr>\n<td style=\"padding:22px;font-size:15px;line-height:1.9;color:#333333;word-break:break-word;\">\n${nl(d.extra_info)}\n</td>\n</tr>\n</table>\n</td>\n</tr>` : '';\n  const entries = [\n    d.company && ['COMPANY', esc(d.company)],\n    site && ['WEBSITE', site],\n    d.role && ['YOUR ROLE', esc(d.role)],\n    d.company_size && ['COMPANY SIZE', esc(d.company_size)],\n    d.annual_revenue && ['ANNUAL REVENUE', esc(d.annual_revenue)],\n    d.project_budget && ['PROJECT BUDGET', esc(d.project_budget)],\n    d.interests && ['HOPING TO IMPROVE', esc(d.interests)],\n  ].filter(Boolean);\n  const summaryBlock = entries.length ? `\n<tr>\n<td bgcolor=\"#FFFFFF\" style=\"padding:5px 30px 30px;background-color:#FFFFFF;\">\n<div style=\"font-size:11px;line-height:1.5;letter-spacing:2px;color:#777777;font-weight:bold;margin-bottom:14px;\">\nYOUR DETAILS\n</div>\n<table role=\"presentation\" width=\"100%\" cellspacing=\"0\" cellpadding=\"0\" border=\"0\" bgcolor=\"#F5F5F5\" style=\"width:100%;background-color:#F5F5F5;border:1px solid #E5E5E5;\">\n${entries.map((e, i) => row(e[0], e[1], i === entries.length - 1)).join('')}\n</table>\n</td>\n</tr>` : '';\n\n  return `<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n<meta charset=\"UTF-8\">\n<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n<meta name=\"color-scheme\" content=\"light\">\n<meta name=\"supported-color-schemes\" content=\"light\">\n<title>Thank You for Reaching Out | Oluwaseyi.</title>\n</head>\n\n<body style=\"margin:0;padding:0;background-color:#FFFFFF;font-family:Arial,Helvetica,sans-serif;color:#141414;\">\n\n<table role=\"presentation\" width=\"100%\" cellspacing=\"0\" cellpadding=\"0\" border=\"0\" bgcolor=\"#FFFFFF\" style=\"width:100%;background-color:#FFFFFF;\">\n<tr>\n<td align=\"center\" style=\"padding:30px 15px;background-color:#FFFFFF;\">\n\n<table role=\"presentation\" width=\"100%\" cellspacing=\"0\" cellpadding=\"0\" border=\"0\" bgcolor=\"#FFFFFF\" style=\"width:100%;max-width:600px;background-color:#FFFFFF;border:1px solid #E5E5E5;\">\n\n<!-- BLACK HEADER -->\n<tr>\n<td align=\"center\" bgcolor=\"#141414\" style=\"padding:38px 25px;text-align:center;background-color:#141414;border-bottom:1px solid #333333;\">\n\n<div style=\"font-size:28px;line-height:1.3;font-weight:700;letter-spacing:-1px;color:#FFFFFF;\">\nOluwaseyi.\n</div>\n\n<div style=\"font-size:10px;line-height:1.8;letter-spacing:2px;text-transform:uppercase;color:#A3A3A3;margin-top:10px;\">\nBuilding systems that work for your business.\n</div>\n\n</td>\n</tr>\n\n<!-- WHITE MAIN CONTENT -->\n<tr>\n<td bgcolor=\"#FFFFFF\" style=\"padding:40px 30px 25px;background-color:#FFFFFF;\">\n\n<div style=\"font-size:11px;line-height:1.5;letter-spacing:2px;color:#777777;font-weight:bold;\">\nMESSAGE RECEIVED\n</div>\n\n<h1 style=\"font-size:29px;line-height:1.3;letter-spacing:-1px;color:#141414;margin:18px 0 15px;font-weight:700;\">\nThank you for reaching out, ${name}.\n</h1>\n\n<p style=\"font-size:15px;line-height:1.9;color:#555555;margin:0;\">\nI appreciate you taking the time to get in touch. Your message has been successfully received, and I'll review it personally.\n</p>\n\n<p style=\"font-size:15px;line-height:1.9;color:#555555;margin:15px 0 0;\">\nI'll get back to you as soon as possible. In the meantime, here's a copy of the message you sent.\n</p>\n\n</td>\n</tr>\n\n${summaryBlock}\n<!-- CLIENT MESSAGE -->\n<tr>\n<td bgcolor=\"#FFFFFF\" style=\"padding:5px 30px 35px;background-color:#FFFFFF;\">\n\n<div style=\"font-size:11px;line-height:1.5;letter-spacing:2px;color:#777777;font-weight:bold;margin-bottom:14px;\">\nHOW YOU SAID I CAN HELP\n</div>\n\n<table role=\"presentation\" width=\"100%\" cellspacing=\"0\" cellpadding=\"0\" border=\"0\" bgcolor=\"#F5F5F5\" style=\"width:100%;background-color:#F5F5F5;border:1px solid #E5E5E5;\">\n<tr>\n<td style=\"padding:22px;font-size:15px;line-height:1.9;color:#333333;word-break:break-word;\">\n${message}\n</td>\n</tr>\n</table>\n\n</td>\n</tr>\n\n${extraBlock}\n<!-- CLOSING AND SIGNATURE: WHITE -->\n<tr>\n<td bgcolor=\"#FFFFFF\" style=\"padding:28px 30px 35px;background-color:#FFFFFF;border-top:1px solid #E5E5E5;\">\n\n<p style=\"font-size:15px;line-height:1.9;color:#555555;margin:0 0 25px;\">\nThank you for your interest. I look forward to learning more about what you're building.\n</p>\n\n<p style=\"font-size:18px;line-height:1.5;font-weight:700;color:#141414;margin:0 0 7px;\">\nOluwaseyi.\n</p>\n\n<p style=\"font-size:13px;line-height:1.6;letter-spacing:0.3px;color:#777777;margin:0;\">\nAI Automation Specialist &amp; Web Dev\n</p>\n\n</td>\n</tr>\n\n<!-- BLACK COPYRIGHT FOOTER -->\n<tr>\n<td align=\"center\" bgcolor=\"#141414\" style=\"padding:24px 20px;background-color:#141414;text-align:center;\">\n\n<p style=\"font-size:11px;line-height:1.8;color:#FFFFFF;margin:0;\">\nThis is an automated acknowledgement of your enquiry.\n</p>\n\n<p style=\"font-size:11px;line-height:1.8;color:#A3A3A3;margin:8px 0 0;\">\n&copy; ${year} Oluwaseyi. All rights reserved.\n</p>\n\n</td>\n</tr>\n\n</table>\n</td>\n</tr>\n</table>\n\n</body>\n</html>`;\n})() }}",
+        "options": {
+          "appendAttribution": false,
+          "senderName": "Oluwaseyi."
+        }
+      },
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "1CPI3z6ICJYKdvjC",
+          "name": "Gmail account 2"
+        }
+      }
+    },
+    {
+      "id": "1b00a3db-5bb7-4a8f-b435-dd0ff20c58e1",
+      "name": "Reply OK1",
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1.4,
       "position": [
-        1120,
-        0
-      ]
+        288,
+        -1040
+      ],
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { \"success\": true, \"message\": \"Thank you for reaching out, I will be in touch shortly.\" } }}",
+        "options": {
+          "responseCode": 200
+        }
+      }
     },
     {
+      "id": "4858417b-5a18-4e35-85d8-be7fb9acf4ec",
+      "name": "Reply invalid1",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        -832,
+        -624
+      ],
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { \"success\": false, \"message\": \"This enquiry could not be processed. Please try again.\" } }}",
+        "options": {
+          "responseCode": 400
+        }
+      }
+    },
+    {
+      "id": "62448850-212f-44c5-b301-8f43de17ef8a",
+      "name": "Reply failed1",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        64,
+        -704
+      ],
       "parameters": {
         "respondWith": "json",
         "responseBody": "={{ { \"success\": false, \"message\": \"Your message could not be delivered right now. Please try again, or email me directly.\" } }}",
         "options": {
           "responseCode": 502
         }
-      },
-      "id": "49d2e84e-5d2e-4541-85f4-69dd36114c8d",
-      "name": "Reply failed",
-      "type": "n8n-nodes-base.respondToWebhook",
-      "typeVersion": 1.4,
-      "position": [
-        1568,
-        0
-      ]
+      }
     },
     {
-      "parameters": {
-        "method": "POST",
-        "url": "https://YOUR-PROJECT-REF.supabase.co/rest/v1/rpc/portfolio_log_workflow_error",
-        "authentication": "genericCredentialType",
-        "genericAuthType": "httpHeaderAuth",
-        "sendBody": true,
-        "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ p_key: 'REPLACE_WITH_ERROR_INGEST_KEY', p_workflow: 'Enquiry from Portfolio', p_node: 'Claim inquiry', p_message: String($json.error?.message ?? $json.error ?? 'Unknown error'), p_details: JSON.stringify($json.error ?? {}).slice(0, 3000), p_execution_id: String($execution.id) }) }}",
-        "options": {
-          "timeout": 8000
-        }
-      },
-      "id": "af9bb44d-84f0-40ef-a0d5-f9c15713b9c8",
+      "id": "3181b322-ace9-40ce-ba9c-4cb7c8861e7c",
       "name": "Log claim error",
+      "notes": "Reports this failure to the Studio Errors dashboard, then carries on with the reply.",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
+      "onError": "continueRegularOutput",
       "position": [
-        900,
-        100
+        -832,
+        -616
       ],
+      "parameters": {
+        "method": "POST",
+        "url": "=https://YOUR-PROJECT-REF.supabase.co/rest/v1/rpc/portfolio_log_workflow_error",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ p_key: 'REPLACE_WITH_ERROR_INGEST_KEY', p_workflow: 'Enquiry from Portfolio', p_node: 'Claim inquiry', p_message: String(typeof $json.error === 'string' ? $json.error : ($json.error?.message ?? JSON.stringify($json.error ?? {}))), p_details: JSON.stringify($json.error ?? {}).slice(0, 3000), p_execution_id: String($execution.id) }) }}",
+        "options": {
+          "timeout": 8000
+        }
+      },
       "credentials": {
         "httpHeaderAuth": {
           "id": "REPLACE_WITH_SUPABASE_APIKEY_CREDENTIAL",
           "name": "Supabase apikey header"
         }
-      },
-      "onError": "continueRegularOutput",
-      "notes": "Reports this failure to the Studio Errors dashboard. Set the URL to your Supabase project and replace REPLACE_WITH_ERROR_INGEST_KEY with the ingest key (never commit the real key)."
+      }
     },
     {
-      "parameters": {
-        "method": "POST",
-        "url": "https://YOUR-PROJECT-REF.supabase.co/rest/v1/rpc/portfolio_log_workflow_error",
-        "authentication": "genericCredentialType",
-        "genericAuthType": "httpHeaderAuth",
-        "sendBody": true,
-        "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ p_key: 'REPLACE_WITH_ERROR_INGEST_KEY', p_workflow: 'Enquiry from Portfolio', p_node: 'Email to Oluwaseyi', p_message: String($json.error?.message ?? $json.error ?? 'Unknown error'), p_details: JSON.stringify($json.error ?? {}).slice(0, 3000), p_execution_id: String($execution.id) }) }}",
-        "options": {
-          "timeout": 8000
-        }
-      },
-      "id": "8c51a29d-e1e7-4c72-8a3b-326aac0008bd",
+      "id": "75b80a80-c0e0-4a7b-8804-21308824dcf5",
       "name": "Log email error",
+      "notes": "Reports this failure to the Studio Errors dashboard, then carries on with the reply.",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
-      "position": [
-        1344,
-        0
-      ],
-      "credentials": {
-        "httpHeaderAuth": {
-          "id": "REPLACE_WITH_SUPABASE_APIKEY_CREDENTIAL",
-          "name": "Supabase apikey header"
-        }
-      },
       "onError": "continueRegularOutput",
-      "notes": "Reports this failure to the Studio Errors dashboard. Set the URL to your Supabase project and replace REPLACE_WITH_ERROR_INGEST_KEY with the ingest key (never commit the real key)."
-    },
-    {
+      "position": [
+        -160,
+        -792
+      ],
       "parameters": {
         "method": "POST",
-        "url": "https://YOUR-PROJECT-REF.supabase.co/rest/v1/rpc/portfolio_log_workflow_error",
+        "url": "=https://YOUR-PROJECT-REF.supabase.co/rest/v1/rpc/portfolio_log_workflow_error",
         "authentication": "genericCredentialType",
         "genericAuthType": "httpHeaderAuth",
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ p_key: 'REPLACE_WITH_ERROR_INGEST_KEY', p_workflow: 'Enquiry from Portfolio', p_node: 'Confirmation to client', p_message: String($json.error?.message ?? $json.error ?? 'Unknown error'), p_details: JSON.stringify($json.error ?? {}).slice(0, 3000), p_execution_id: String($execution.id) }) }}",
+        "jsonBody": "={{ JSON.stringify({ p_key: 'REPLACE_WITH_ERROR_INGEST_KEY', p_workflow: 'Enquiry from Portfolio', p_node: 'Email to Oluwaseyi1', p_message: String(typeof $json.error === 'string' ? $json.error : ($json.error?.message ?? JSON.stringify($json.error ?? {}))), p_details: JSON.stringify($json.error ?? {}).slice(0, 3000), p_execution_id: String($execution.id) }) }}",
         "options": {
           "timeout": 8000
         }
       },
-      "id": "cac3b698-7ad2-4a60-b2f7-7cbfaf4aaf87",
-      "name": "Log confirmation error",
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.2,
-      "position": [
-        1568,
-        -100
-      ],
       "credentials": {
         "httpHeaderAuth": {
           "id": "REPLACE_WITH_SUPABASE_APIKEY_CREDENTIAL",
           "name": "Supabase apikey header"
         }
-      },
+      }
+    },
+    {
+      "id": "6598e4e5-56ee-4bae-a13e-235c0dc60cda",
+      "name": "Log confirmation error",
+      "notes": "Reports this failure to the Studio Errors dashboard, then carries on with the reply.",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
       "onError": "continueRegularOutput",
-      "notes": "Reports this failure to the Studio Errors dashboard. Set the URL to your Supabase project and replace REPLACE_WITH_ERROR_INGEST_KEY with the ingest key (never commit the real key)."
+      "position": [
+        64,
+        -840
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "=https://YOUR-PROJECT-REF.supabase.co/rest/v1/rpc/portfolio_log_workflow_error",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ p_key: 'REPLACE_WITH_ERROR_INGEST_KEY', p_workflow: 'Enquiry from Portfolio', p_node: 'Confirmation to client1', p_message: String(typeof $json.error === 'string' ? $json.error : ($json.error?.message ?? JSON.stringify($json.error ?? {}))), p_details: JSON.stringify($json.error ?? {}).slice(0, 3000), p_execution_id: String($execution.id) }) }}",
+        "options": {
+          "timeout": 8000
+        }
+      },
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "REPLACE_WITH_SUPABASE_APIKEY_CREDENTIAL",
+          "name": "Supabase apikey header"
+        }
+      }
     }
   ],
   "connections": {
@@ -433,7 +498,7 @@
         ],
         [
           {
-            "node": "Reply invalid",
+            "node": "Reply invalid1",
             "type": "main",
             "index": 0
           }
@@ -480,18 +545,18 @@
       "main": [
         [
           {
-            "node": "Email to Oluwaseyi",
+            "node": "Email to Oluwaseyi1",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Email to Oluwaseyi": {
+    "Email to Oluwaseyi1": {
       "main": [
         [
           {
-            "node": "Confirmation to client",
+            "node": "Confirmation to client1",
             "type": "main",
             "index": 0
           }
@@ -505,11 +570,11 @@
         ]
       ]
     },
-    "Confirmation to client": {
+    "Confirmation to client1": {
       "main": [
         [
           {
-            "node": "Reply OK",
+            "node": "Reply OK1",
             "type": "main",
             "index": 0
           }
@@ -527,7 +592,7 @@
       "main": [
         [
           {
-            "node": "Reply failed",
+            "node": "Reply failed1",
             "type": "main",
             "index": 0
           }
@@ -538,7 +603,7 @@
       "main": [
         [
           {
-            "node": "Reply failed",
+            "node": "Reply failed1",
             "type": "main",
             "index": 0
           }
@@ -549,17 +614,12 @@
       "main": [
         [
           {
-            "node": "Reply OK",
+            "node": "Reply OK1",
             "type": "main",
             "index": 0
           }
         ]
       ]
     }
-  },
-  "active": false,
-  "settings": {
-    "executionOrder": "v1"
-  },
-  "tags": []
+  }
 }

@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useCallback } from 'react'
+import { useState, useEffect, useMemo, useCallback, Fragment } from 'react'
 import { useAuth, OWNER_EMAIL } from '../context/AuthContext'
 import type {
   PortfolioProject,
@@ -32,6 +32,7 @@ export default function StudioDashboard() {
   const [inquiries, setInquiries] = useState<PortfolioInquiry[]>([])
   const [loading, setLoading] = useState(true)
   const [loadingInquiries, setLoadingInquiries] = useState(false)
+  const [expandedInquiry, setExpandedInquiry] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
 
   // Filters & Search
@@ -319,46 +320,85 @@ export default function StudioDashboard() {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-line">
-                    {inquiries.map((inq) => (
-                      <tr key={inq.id} className="hover:bg-surface transition-colors">
-                        <td className="py-3 px-4 whitespace-nowrap text-muted">
-                          {new Date(inq.created_at).toLocaleString([], {
-                            month: 'short',
-                            day: 'numeric',
-                            hour: '2-digit',
-                            minute: '2-digit',
-                          })}
-                        </td>
-                        <td className="py-3 px-4 font-bold text-fg whitespace-nowrap">
-                          {inq.name}
-                        </td>
-                        <td className="py-3 px-4 whitespace-nowrap">
-                          <a
-                            href={`mailto:${inq.email}`}
-                            className="text-fg underline underline-offset-2 hover:opacity-70"
-                          >
-                            {inq.email}
-                          </a>
-                        </td>
-                        <td className="py-3 px-4 text-muted max-w-md break-words">
-                          {inq.message}
-                        </td>
-                        <td className="py-3 px-4 whitespace-nowrap">
-                          {inq.webhook_sent ? (
-                            <span className="inline-block px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider bg-fg text-bg">
-                              Webhook Delivered
-                            </span>
-                          ) : (
-                            <span
-                              className="inline-block px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider border border-line-strong text-muted"
-                              title={inq.webhook_response || 'Waiting for active webhook'}
-                            >
-                              Saved in DB
-                            </span>
+                    {inquiries.map((inq) => {
+                      const hasDetails = !!(inq.company || inq.role || inq.project_budget || inq.interests?.length || inq.extra_info)
+                      const isOpen = expandedInquiry === inq.id
+                      const detail = (label: string, value?: string | null) =>
+                        value ? (
+                          <div>
+                            <dt className="text-[10px] font-bold uppercase tracking-[0.12em] text-muted mb-0.5">{label}</dt>
+                            <dd className="text-xs text-fg break-words">{value}</dd>
+                          </div>
+                        ) : null
+                      return (
+                        <Fragment key={inq.id}>
+                          <tr className="hover:bg-surface transition-colors">
+                            <td className="py-3 px-4 whitespace-nowrap text-muted">
+                              {new Date(inq.created_at).toLocaleString([], {
+                                month: 'short',
+                                day: 'numeric',
+                                hour: '2-digit',
+                                minute: '2-digit',
+                              })}
+                            </td>
+                            <td className="py-3 px-4 whitespace-nowrap">
+                              <span className="font-bold text-fg">{inq.name}</span>
+                              {inq.company && <span className="block text-muted">{inq.company}</span>}
+                            </td>
+                            <td className="py-3 px-4 whitespace-nowrap">
+                              <a
+                                href={`mailto:${inq.email}`}
+                                className="text-fg underline underline-offset-2 hover:opacity-70"
+                              >
+                                {inq.email}
+                              </a>
+                            </td>
+                            <td className="py-3 px-4 text-muted max-w-md break-words">
+                              <span className="block">{inq.message}</span>
+                              {hasDetails && (
+                                <button
+                                  onClick={() => setExpandedInquiry(isOpen ? null : inq.id)}
+                                  aria-expanded={isOpen}
+                                  className="mt-2 px-2.5 py-1.5 border border-line text-[10px] font-bold uppercase tracking-wider text-fg hover:border-fg transition-colors"
+                                >
+                                  {isOpen ? 'Hide answers' : 'All answers'}
+                                </button>
+                              )}
+                            </td>
+                            <td className="py-3 px-4 whitespace-nowrap">
+                              {inq.webhook_sent ? (
+                                <span className="inline-block px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider bg-fg text-bg">
+                                  Webhook Delivered
+                                </span>
+                              ) : (
+                                <span
+                                  className="inline-block px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider border border-line-strong text-muted"
+                                  title={inq.webhook_response || 'Waiting for active webhook'}
+                                >
+                                  Saved in DB
+                                </span>
+                              )}
+                            </td>
+                          </tr>
+                          {isOpen && (
+                            <tr className="bg-surface">
+                              <td colSpan={5} className="px-4 py-4">
+                                <dl className="grid sm:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-3">
+                                  {detail('Company', inq.company)}
+                                  {detail('Website', inq.website)}
+                                  {detail('Role', inq.role)}
+                                  {detail('Company size', inq.company_size)}
+                                  {detail('Annual revenue', inq.annual_revenue)}
+                                  {detail('Project budget', inq.project_budget)}
+                                  {detail('Wants to improve', inq.interests?.join(', '))}
+                                  {detail('Anything else', inq.extra_info)}
+                                </dl>
+                              </td>
+                            </tr>
                           )}
-                        </td>
-                      </tr>
-                    ))}
+                        </Fragment>
+                      )
+                    })}
                   </tbody>
                 </table>
               </div>

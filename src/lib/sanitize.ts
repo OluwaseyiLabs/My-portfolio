@@ -4,7 +4,7 @@
  * stripped, lengths are capped, and wording that tries to give instructions to an AI is refused.
  */
 
-export const LIMITS = { name: 80, email: 254, message: 2000 } as const
+export const LIMITS = { name: 80, firstName: 40, lastName: 40, email: 254, company: 120, website: 200, message: 2000, extra: 2000 } as const
 
 // control characters (except newline/tab), zero-width and bidi-override characters
 const INVISIBLE = /[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F​-‏‪-‮⁠-⁤⁦-⁩﻿]/g
