@@ -23,20 +23,20 @@ export default function ProjectPreviewModal({
       role="dialog"
       aria-modal="true"
     >
-      <div className="relative w-full max-w-4xl bg-white text-black max-h-[92vh] overflow-y-auto shadow-2xl">
+      <div className="relative w-full max-w-4xl bg-bg text-fg max-h-[92dvh] overflow-y-auto shadow-2xl">
         {/* Top bar with PREVIEW badge */}
-        <div className="sticky top-0 z-20 bg-black text-white px-6 py-3 flex items-center justify-between border-b border-black">
+        <div className="sticky top-0 z-20 bg-fg text-bg px-6 py-3 flex items-center justify-between border-b border-fg">
           <div className="flex items-center gap-3">
-            <span className="bg-white text-black text-[10px] font-black uppercase px-2 py-0.5 tracking-wider">
+            <span className="bg-bg text-fg text-[10px] font-black uppercase px-2 py-0.5 tracking-wider">
               Preview Mode
             </span>
-            <span className="text-xs text-white/70">
+            <span className="text-xs text-bg/70">
               This is how your project appears on the public website.
             </span>
           </div>
           <button
             onClick={onClose}
-            className="text-white hover:text-white/70 text-xs font-semibold px-2 py-1 border border-white/30 hover:border-white transition-colors"
+            className="text-bg hover:text-bg/70 text-xs font-semibold px-2 py-1 border border-bg/30 hover:border-bg transition-colors"
           >
             Close Preview ✕
           </button>
@@ -46,14 +46,14 @@ export default function ProjectPreviewModal({
         {isAI ? (
           <div className="p-6 sm:p-10 space-y-8">
             <div>
-              <span className="text-xs font-semibold tracking-[0.2em] uppercase text-[#555555] mb-2 block">
+              <span className="text-xs font-semibold tracking-[0.2em] uppercase text-muted mb-2 block">
                 Case Study — AI Automation
               </span>
-              <h2 className="text-3xl sm:text-4xl font-black tracking-tight text-black mb-3">
+              <h2 className="text-3xl sm:text-4xl font-black tracking-tight text-fg mb-3">
                 {project.title || 'Untitled Workflow'}
               </h2>
               {project.short_description && (
-                <p className="text-[#555555] text-base mb-4 leading-relaxed">
+                <p className="text-muted text-base mb-4 leading-relaxed">
                   {project.short_description}
                 </p>
               )}
@@ -62,7 +62,7 @@ export default function ProjectPreviewModal({
                   {project.technologies.map((t) => (
                     <span
                       key={t}
-                      className="text-xs font-medium px-3 py-1 border border-[#E5E5E5] text-[#333333]"
+                      className="text-xs font-medium px-3 py-1 border border-line text-muted"
                     >
                       {t}
                     </span>
@@ -73,26 +73,26 @@ export default function ProjectPreviewModal({
 
             {/* Core Challenge + Solution */}
             <div className="grid sm:grid-cols-2 gap-5">
-              <div className="border border-[#E5E5E5] p-6">
+              <div className="border border-line p-6">
                 <div className="flex items-center gap-2 mb-3">
-                  <span className="w-2 h-2 bg-black block" />
-                  <h3 className="text-xs font-black uppercase tracking-[0.12em] text-black">
+                  <span className="w-2 h-2 bg-fg block" />
+                  <h3 className="text-xs font-black uppercase tracking-[0.12em] text-fg">
                     Core Challenge
                   </h3>
                 </div>
-                <p className="text-sm text-[#555555] leading-relaxed whitespace-pre-line">
+                <p className="text-sm text-muted leading-relaxed whitespace-pre-line">
                   {project.core_challenge || 'No challenge provided.'}
                 </p>
               </div>
 
-              <div className="border border-black p-6 bg-black text-white">
+              <div className="border border-fg p-6 bg-fg text-bg">
                 <div className="flex items-center gap-2 mb-3">
-                  <span className="w-2 h-2 bg-white block" />
-                  <h3 className="text-xs font-black uppercase tracking-[0.12em] text-white">
+                  <span className="w-2 h-2 bg-bg block" />
+                  <h3 className="text-xs font-black uppercase tracking-[0.12em] text-bg">
                     Solution Delivered
                   </h3>
                 </div>
-                <p className="text-sm text-white/80 leading-relaxed whitespace-pre-line">
+                <p className="text-sm text-bg/80 leading-relaxed whitespace-pre-line">
                   {project.solution_delivered || 'No solution provided.'}
                 </p>
               </div>
@@ -100,14 +100,14 @@ export default function ProjectPreviewModal({
 
             {/* Workflow Implementation Gallery */}
             <div>
-              <h3 className="text-xs font-black uppercase tracking-[0.12em] text-black mb-4 flex items-center gap-3">
+              <h3 className="text-xs font-black uppercase tracking-[0.12em] text-fg mb-4 flex items-center gap-3">
                 Workflow Implementation
-                <span className="flex-1 h-px bg-[#E5E5E5]" />
+                <span className="flex-1 h-px bg-line" />
               </h3>
 
               {images.length > 0 ? (
                 <div className="space-y-4">
-                  <div className="border border-[#E5E5E5] bg-[#F9F9F9] overflow-hidden flex items-center justify-center">
+                  <div className="border border-line bg-surface overflow-hidden flex items-center justify-center">
                     <img
                       src={currentImage.previewUrl}
                       alt={currentImage.altText || project.title || 'Workflow screenshot'}
@@ -115,7 +115,7 @@ export default function ProjectPreviewModal({
                     />
                   </div>
                   {currentImage.caption && (
-                    <p className="text-xs text-[#666666] italic text-center">
+                    <p className="text-xs text-muted italic text-center">
                       {currentImage.caption}
                     </p>
                   )}
@@ -129,8 +129,8 @@ export default function ProjectPreviewModal({
                           onClick={() => setActiveImageIdx(idx)}
                           className={`flex-shrink-0 w-20 h-14 border overflow-hidden ${
                             idx === activeImageIdx
-                              ? 'border-black ring-2 ring-black'
-                              : 'border-[#E5E5E5] opacity-70 hover:opacity-100'
+                              ? 'border-fg ring-2 ring-fg'
+                              : 'border-line opacity-70 hover:opacity-100'
                           }`}
                         >
                           <img
@@ -144,7 +144,7 @@ export default function ProjectPreviewModal({
                   )}
                 </div>
               ) : (
-                <div className="border border-dashed border-[#CCCCCC] p-8 text-center text-xs text-[#888888]">
+                <div className="border border-dashed border-line-strong p-8 text-center text-xs text-faint">
                   No workflow screenshots uploaded yet.
                 </div>
               )}
@@ -154,14 +154,14 @@ export default function ProjectPreviewModal({
           /* Web Design Preview Layout */
           <div className="p-6 sm:p-10 space-y-6">
             <div>
-              <span className="text-xs font-semibold tracking-[0.2em] uppercase text-[#555555] mb-2 block">
+              <span className="text-xs font-semibold tracking-[0.2em] uppercase text-muted mb-2 block">
                 Web Design &amp; Development Project
               </span>
-              <h2 className="text-3xl font-black tracking-tight text-black mb-2">
+              <h2 className="text-3xl font-black tracking-tight text-fg mb-2">
                 {project.title || 'Untitled Website'}
               </h2>
               {project.short_description && (
-                <p className="text-sm text-[#555555] leading-relaxed mb-4">
+                <p className="text-sm text-muted leading-relaxed mb-4">
                   {project.short_description}
                 </p>
               )}
@@ -171,7 +171,7 @@ export default function ProjectPreviewModal({
                     href={project.project_url}
                     target="_blank"
                     rel="noreferrer"
-                    className="inline-flex items-center gap-1.5 text-xs font-bold text-black border-b border-black pb-0.5"
+                    className="inline-flex items-center gap-1.5 text-xs font-bold text-fg border-b border-fg pb-0.5"
                   >
                     Visit Live Website ↗
                   </a>
@@ -182,7 +182,7 @@ export default function ProjectPreviewModal({
             {/* Website Screenshot Viewer */}
             {images.length > 0 ? (
               <div className="space-y-4">
-                <div className="border border-[#E5E5E5] bg-[#F5F5F5] overflow-hidden flex items-center justify-center">
+                <div className="border border-line bg-surface overflow-hidden flex items-center justify-center">
                   <img
                     src={currentImage.previewUrl}
                     alt={currentImage.altText || project.title || 'Website screenshot'}
@@ -196,7 +196,7 @@ export default function ProjectPreviewModal({
                         key={idx}
                         onClick={() => setActiveImageIdx(idx)}
                         className={`w-2.5 h-2.5 rounded-full transition-colors ${
-                          idx === activeImageIdx ? 'bg-black' : 'bg-[#CCCCCC]'
+                          idx === activeImageIdx ? 'bg-fg' : 'bg-line-strong'
                         }`}
                       />
                     ))}
@@ -204,7 +204,7 @@ export default function ProjectPreviewModal({
                 )}
               </div>
             ) : (
-              <div className="border border-dashed border-[#CCCCCC] p-12 text-center text-xs text-[#888888]">
+              <div className="border border-dashed border-line-strong p-12 text-center text-xs text-faint">
                 No website screenshots uploaded yet.
               </div>
             )}

@@ -10,6 +10,7 @@ import {
   deleteProjectPermanently,
   updateProjectStatus,
   fetchInquiries,
+  countOpenWorkflowErrors,
   type PortfolioInquiry,
 } from '../lib/supabase'
 import ProjectEditorModal from './ProjectEditorModal'
@@ -17,12 +18,15 @@ import ProjectPreviewModal from './ProjectPreviewModal'
 import SkillsManager from './SkillsManager'
 import SiteContentManager from './SiteContentManager'
 import AnalyticsPanel from './AnalyticsPanel'
+import ErrorsPanel from './ErrorsPanel'
+import ThemeToggle from '../components/ThemeToggle'
 
 export default function StudioDashboard() {
   const { signOut } = useAuth()
 
   // State
-  const [activeView, setActiveView] = useState<'PROJECTS' | 'INQUIRIES' | 'SKILLS' | 'CONTENT' | 'ANALYTICS'>('PROJECTS')
+  const [activeView, setActiveView] = useState<'PROJECTS' | 'INQUIRIES' | 'SKILLS' | 'CONTENT' | 'ANALYTICS' | 'ERRORS'>('PROJECTS')
+  const [openErrorCount, setOpenErrorCount] = useState<number | null>(null)
   const [skillCount, setSkillCount] = useState<number | null>(null)
   const [projects, setProjects] = useState<PortfolioProject[]>([])
   const [inquiries, setInquiries] = useState<PortfolioInquiry[]>([])
@@ -73,6 +77,7 @@ export default function StudioDashboard() {
   useEffect(() => {
     loadProjects()
     loadInquiries()
+    countOpenWorkflowErrors().then(setOpenErrorCount)
   }, [loadProjects, loadInquiries])
 
   // Metrics computation
@@ -132,35 +137,36 @@ export default function StudioDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-white text-black flex flex-col">
+    <div className="studio-root min-h-dvh bg-bg text-fg flex flex-col">
       {/* ── Top Header ── */}
-      <header className="border-b border-[#E5E5E5] bg-white sticky top-0 z-30">
-        <div className="max-w-7xl mx-auto px-6 lg:px-12 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <span className="text-base font-black tracking-tight text-black">
-              Oluwaseyi Studio.
+      <header className="border-b border-line bg-bg sticky top-0 z-30">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-12 h-16 flex items-center justify-between gap-3">
+          <div className="flex items-center gap-4 min-w-0">
+            <span className="text-base font-black tracking-tight text-fg whitespace-nowrap">
+              <span className="hidden min-[400px]:inline">Oluwaseyi </span>Studio.
             </span>
-            <span className="hidden sm:inline-block text-[10px] uppercase font-bold tracking-[0.15em] px-2 py-0.5 bg-[#F0F0F0] text-[#555555]">
+            <span className="hidden sm:inline-block text-[10px] uppercase font-bold tracking-[0.15em] px-2 py-0.5 bg-surface text-muted">
               Owner CMS
             </span>
           </div>
 
-          <div className="flex items-center gap-4 text-xs font-semibold">
+          <div className="flex items-center gap-3 sm:gap-4 text-xs font-semibold shrink-0">
             <a
               href="/"
               target="_blank"
               rel="noreferrer"
-              className="text-[#555555] hover:text-black transition-colors hidden sm:inline-flex items-center gap-1"
+              className="text-muted hover:text-fg transition-colors hidden sm:inline-flex items-center gap-1"
             >
               View Public Website ↗
             </a>
-            <span className="text-[#CCCCCC] hidden sm:inline">|</span>
-            <span className="text-[#777777] hidden md:inline truncate max-w-[200px]">
+            <ThemeToggle />
+            <span className="text-faint hidden sm:inline">|</span>
+            <span className="text-muted hidden md:inline truncate max-w-[200px]">
               {OWNER_EMAIL}
             </span>
             <button
               onClick={() => signOut()}
-              className="px-3 py-1.5 border border-[#CCCCCC] hover:border-black text-black transition-colors"
+              className="px-3 py-2 sm:py-1.5 border border-line-strong hover:border-fg text-fg transition-colors whitespace-nowrap"
             >
               Sign Out
             </button>
@@ -169,15 +175,15 @@ export default function StudioDashboard() {
       </header>
 
       {/* ── Main Dashboard Body ── */}
-      <main className="max-w-7xl mx-auto px-6 lg:px-12 py-10 w-full flex-1">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-12 py-6 sm:py-10 w-full flex-1">
         {/* View Tabs */}
-        <div className="flex items-center gap-2 mb-8 border-b border-[#E5E5E5] pb-3">
+        <div className="flex items-center gap-2 mb-6 sm:mb-8 border-b border-line pb-3 overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           <button
             onClick={() => setActiveView('PROJECTS')}
-            className={`px-4 py-2 text-xs font-bold uppercase tracking-wider transition-colors ${
+            className={`shrink-0 whitespace-nowrap px-4 py-2.5 sm:py-2 text-xs font-bold uppercase tracking-wider transition-colors ${
               activeView === 'PROJECTS'
-                ? 'bg-black text-white'
-                : 'bg-white text-[#555555] hover:text-black border border-[#E5E5E5]'
+                ? 'bg-fg text-bg'
+                : 'bg-bg text-muted hover:text-fg border border-line'
             }`}
           >
             Portfolio Projects ({projects.length})
@@ -187,17 +193,17 @@ export default function StudioDashboard() {
               setActiveView('INQUIRIES')
               loadInquiries()
             }}
-            className={`px-4 py-2 text-xs font-bold uppercase tracking-wider transition-colors inline-flex items-center gap-2 ${
+            className={`shrink-0 whitespace-nowrap px-4 py-2.5 sm:py-2 text-xs font-bold uppercase tracking-wider transition-colors inline-flex items-center gap-2 ${
               activeView === 'INQUIRIES'
-                ? 'bg-black text-white'
-                : 'bg-white text-[#555555] hover:text-black border border-[#E5E5E5]'
+                ? 'bg-fg text-bg'
+                : 'bg-bg text-muted hover:text-fg border border-line'
             }`}
           >
             <span>Contact Inquiries</span>
             {inquiries.length > 0 && (
               <span
                 className={`px-1.5 py-0.5 text-[10px] font-black rounded-full ${
-                  activeView === 'INQUIRIES' ? 'bg-white text-black' : 'bg-black text-white'
+                  activeView === 'INQUIRIES' ? 'bg-bg text-fg' : 'bg-fg text-bg'
                 }`}
               >
                 {inquiries.length}
@@ -206,37 +212,58 @@ export default function StudioDashboard() {
           </button>
           <button
             onClick={() => setActiveView('SKILLS')}
-            className={`px-4 py-2 text-xs font-bold uppercase tracking-wider transition-colors ${
+            className={`shrink-0 whitespace-nowrap px-4 py-2.5 sm:py-2 text-xs font-bold uppercase tracking-wider transition-colors ${
               activeView === 'SKILLS'
-                ? 'bg-black text-white'
-                : 'bg-white text-[#555555] hover:text-black border border-[#E5E5E5]'
+                ? 'bg-fg text-bg'
+                : 'bg-bg text-muted hover:text-fg border border-line'
             }`}
           >
             Skills{skillCount !== null ? ` (${skillCount})` : ''}
           </button>
           <button
             onClick={() => setActiveView('CONTENT')}
-            className={`px-4 py-2 text-xs font-bold uppercase tracking-wider transition-colors ${
+            className={`shrink-0 whitespace-nowrap px-4 py-2.5 sm:py-2 text-xs font-bold uppercase tracking-wider transition-colors ${
               activeView === 'CONTENT'
-                ? 'bg-black text-white'
-                : 'bg-white text-[#555555] hover:text-black border border-[#E5E5E5]'
+                ? 'bg-fg text-bg'
+                : 'bg-bg text-muted hover:text-fg border border-line'
             }`}
           >
             Site Content
           </button>
           <button
             onClick={() => setActiveView('ANALYTICS')}
-            className={`px-4 py-2 text-xs font-bold uppercase tracking-wider transition-colors ${
+            className={`shrink-0 whitespace-nowrap px-4 py-2.5 sm:py-2 text-xs font-bold uppercase tracking-wider transition-colors ${
               activeView === 'ANALYTICS'
-                ? 'bg-black text-white'
-                : 'bg-white text-[#555555] hover:text-black border border-[#E5E5E5]'
+                ? 'bg-fg text-bg'
+                : 'bg-bg text-muted hover:text-fg border border-line'
             }`}
           >
             Analytics
           </button>
+          <button
+            onClick={() => setActiveView('ERRORS')}
+            className={`shrink-0 whitespace-nowrap px-4 py-2.5 sm:py-2 text-xs font-bold uppercase tracking-wider transition-colors inline-flex items-center gap-2 ${
+              activeView === 'ERRORS'
+                ? 'bg-fg text-bg'
+                : 'bg-bg text-muted hover:text-fg border border-line'
+            }`}
+          >
+            <span>Errors</span>
+            {openErrorCount !== null && openErrorCount > 0 && (
+              <span
+                className={`px-1.5 py-0.5 text-[10px] font-black rounded-full ${
+                  activeView === 'ERRORS' ? 'bg-bg text-fg' : 'bg-fg text-bg'
+                }`}
+              >
+                {openErrorCount}
+              </span>
+            )}
+          </button>
         </div>
 
-        {activeView === 'ANALYTICS' ? (
+        {activeView === 'ERRORS' ? (
+          <ErrorsPanel onOpenCountChange={setOpenErrorCount} />
+        ) : activeView === 'ANALYTICS' ? (
           <AnalyticsPanel
             onOpenInquiries={() => {
               setActiveView('INQUIRIES')
@@ -250,40 +277,40 @@ export default function StudioDashboard() {
         ) : activeView === 'INQUIRIES' ? (
           <div>
             {/* Inquiries Header */}
-            <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-6 pb-4 border-b border-black">
+            <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-6 pb-4 border-b border-fg">
               <div>
-                <p className="text-xs font-semibold tracking-[0.2em] uppercase text-[#555555] mb-1">
+                <p className="text-xs font-semibold tracking-[0.2em] uppercase text-muted mb-1">
                   Inbox
                 </p>
-                <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-black">
+                <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-fg">
                   Contact Form Inquiries ({inquiries.length})
                 </h1>
               </div>
               <button
                 onClick={loadInquiries}
                 disabled={loadingInquiries}
-                className="px-4 py-2 border border-black text-xs font-bold uppercase tracking-wider hover:bg-black hover:text-white transition-colors self-start sm:self-auto disabled:opacity-50"
+                className="px-4 py-2 border border-fg text-xs font-bold uppercase tracking-wider hover:bg-fg hover:text-bg transition-colors self-start sm:self-auto disabled:opacity-50"
               >
                 {loadingInquiries ? 'Refreshing…' : '↻ Refresh Inquiries'}
               </button>
             </div>
 
             {loadingInquiries && inquiries.length === 0 ? (
-              <div className="p-16 border border-[#E5E5E5] text-center text-xs font-bold text-[#777777]">
+              <div className="p-16 border border-line text-center text-xs font-bold text-muted">
                 Loading inquiries from database...
               </div>
             ) : inquiries.length === 0 ? (
-              <div className="p-16 border border-dashed border-[#CCCCCC] text-center">
-                <p className="text-sm font-bold text-black mb-1">No inquiries yet</p>
-                <p className="text-xs text-[#777777]">
+              <div className="p-16 border border-dashed border-line-strong text-center">
+                <p className="text-sm font-bold text-fg mb-1">No inquiries yet</p>
+                <p className="text-xs text-muted">
                   Messages submitted through your portfolio contact form will appear here.
                 </p>
               </div>
             ) : (
-              <div className="border border-[#E5E5E5] overflow-x-auto bg-white">
+              <div className="border border-line overflow-x-auto bg-bg">
                 <table className="w-full text-left border-collapse text-xs">
                   <thead>
-                    <tr className="bg-[#F8F8F8] border-b border-[#E5E5E5] text-[10px] uppercase font-bold tracking-wider text-[#555555]">
+                    <tr className="bg-surface border-b border-line text-[10px] uppercase font-bold tracking-wider text-muted">
                       <th className="py-3 px-4">Date</th>
                       <th className="py-3 px-4">Name</th>
                       <th className="py-3 px-4">Email</th>
@@ -291,10 +318,10 @@ export default function StudioDashboard() {
                       <th className="py-3 px-4">Webhook Status</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-[#E5E5E5]">
+                  <tbody className="divide-y divide-line">
                     {inquiries.map((inq) => (
-                      <tr key={inq.id} className="hover:bg-[#FAFAFA] transition-colors">
-                        <td className="py-3 px-4 whitespace-nowrap text-[#777777]">
+                      <tr key={inq.id} className="hover:bg-surface transition-colors">
+                        <td className="py-3 px-4 whitespace-nowrap text-muted">
                           {new Date(inq.created_at).toLocaleString([], {
                             month: 'short',
                             day: 'numeric',
@@ -302,28 +329,28 @@ export default function StudioDashboard() {
                             minute: '2-digit',
                           })}
                         </td>
-                        <td className="py-3 px-4 font-bold text-black whitespace-nowrap">
+                        <td className="py-3 px-4 font-bold text-fg whitespace-nowrap">
                           {inq.name}
                         </td>
                         <td className="py-3 px-4 whitespace-nowrap">
                           <a
                             href={`mailto:${inq.email}`}
-                            className="text-black underline underline-offset-2 hover:opacity-70"
+                            className="text-fg underline underline-offset-2 hover:opacity-70"
                           >
                             {inq.email}
                           </a>
                         </td>
-                        <td className="py-3 px-4 text-[#333333] max-w-md break-words">
+                        <td className="py-3 px-4 text-muted max-w-md break-words">
                           {inq.message}
                         </td>
                         <td className="py-3 px-4 whitespace-nowrap">
                           {inq.webhook_sent ? (
-                            <span className="inline-block px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider bg-black text-white">
+                            <span className="inline-block px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider bg-fg text-bg">
                               Webhook Delivered
                             </span>
                           ) : (
                             <span
-                              className="inline-block px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider border border-[#CCCCCC] text-[#555555]"
+                              className="inline-block px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider border border-line-strong text-muted"
                               title={inq.webhook_response || 'Waiting for active webhook'}
                             >
                               Saved in DB
@@ -340,12 +367,12 @@ export default function StudioDashboard() {
         ) : (
           <div>
             {/* Title & Actions Row */}
-            <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-8 pb-6 border-b-2 border-black">
+            <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-8 pb-6 border-b-2 border-fg">
               <div>
-                <p className="text-xs font-semibold tracking-[0.2em] uppercase text-[#555555] mb-2">
+                <p className="text-xs font-semibold tracking-[0.2em] uppercase text-muted mb-2">
                   Portfolio Content Manager
                 </p>
-                <h1 className="text-3xl sm:text-4xl font-black tracking-tight text-black">
+                <h1 className="text-3xl sm:text-4xl font-black tracking-tight text-fg">
                   Projects &amp; Workflows
                 </h1>
               </div>
@@ -354,14 +381,14 @@ export default function StudioDashboard() {
               <div className="flex flex-wrap items-center gap-3">
                 <button
                   onClick={() => setCreatingCategory('AI_AUTOMATION')}
-                  className="inline-flex items-center gap-2 px-5 py-3 bg-black text-white text-xs font-bold uppercase tracking-wider border border-black hover:bg-white hover:text-black transition-colors"
+                  className="inline-flex items-center gap-2 px-5 py-3 bg-fg text-bg text-xs font-bold uppercase tracking-wider border border-fg hover:bg-bg hover:text-fg transition-colors"
                 >
                   <span>+</span> Add AI Automation Project
                 </button>
 
                 <button
                   onClick={() => setCreatingCategory('WEB_DEVELOPMENT')}
-                  className="inline-flex items-center gap-2 px-5 py-3 bg-white text-black text-xs font-bold uppercase tracking-wider border border-black hover:bg-black hover:text-white transition-colors"
+                  className="inline-flex items-center gap-2 px-5 py-3 bg-bg text-fg text-xs font-bold uppercase tracking-wider border border-fg hover:bg-fg hover:text-bg transition-colors"
                 >
                   <span>+</span> Add Website Project
                 </button>
@@ -370,52 +397,52 @@ export default function StudioDashboard() {
 
         {/* ── Metrics Cards ── */}
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 mb-10">
-          <div className="border border-[#E5E5E5] p-4 bg-[#FAFAFA]">
-            <p className="text-[10px] font-bold uppercase tracking-[0.15em] text-[#777777] mb-1">
+          <div className="border border-line p-4 bg-surface">
+            <p className="text-[10px] font-bold uppercase tracking-[0.15em] text-muted mb-1">
               Total Projects
             </p>
-            <p className="text-2xl font-black text-black">{metrics.total}</p>
+            <p className="text-2xl font-black text-fg">{metrics.total}</p>
           </div>
 
-          <div className="border border-[#E5E5E5] p-4">
-            <p className="text-[10px] font-bold uppercase tracking-[0.15em] text-[#777777] mb-1">
+          <div className="border border-line p-4">
+            <p className="text-[10px] font-bold uppercase tracking-[0.15em] text-muted mb-1">
               AI Automation
             </p>
-            <p className="text-2xl font-black text-black">{metrics.ai}</p>
+            <p className="text-2xl font-black text-fg">{metrics.ai}</p>
           </div>
 
-          <div className="border border-[#E5E5E5] p-4">
-            <p className="text-[10px] font-bold uppercase tracking-[0.15em] text-[#777777] mb-1">
+          <div className="border border-line p-4">
+            <p className="text-[10px] font-bold uppercase tracking-[0.15em] text-muted mb-1">
               Web Development
             </p>
-            <p className="text-2xl font-black text-black">{metrics.web}</p>
+            <p className="text-2xl font-black text-fg">{metrics.web}</p>
           </div>
 
-          <div className="border border-black p-4 bg-black text-white">
-            <p className="text-[10px] font-bold uppercase tracking-[0.15em] text-white/70 mb-1">
+          <div className="border border-fg p-4 bg-fg text-bg">
+            <p className="text-[10px] font-bold uppercase tracking-[0.15em] text-bg/70 mb-1">
               Published Live
             </p>
-            <p className="text-2xl font-black text-white">{metrics.published}</p>
+            <p className="text-2xl font-black text-bg">{metrics.published}</p>
           </div>
 
-          <div className="border border-[#E5E5E5] p-4">
-            <p className="text-[10px] font-bold uppercase tracking-[0.15em] text-[#777777] mb-1">
+          <div className="border border-line p-4">
+            <p className="text-[10px] font-bold uppercase tracking-[0.15em] text-muted mb-1">
               Drafts
             </p>
-            <p className="text-2xl font-black text-black">{metrics.drafts}</p>
+            <p className="text-2xl font-black text-fg">{metrics.drafts}</p>
           </div>
         </div>
 
         {/* ── Search & Filter Controls ── */}
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4 mb-6">
           {/* Category Tabs */}
-          <div className="flex items-center gap-1 border-b sm:border-b-0 pb-2 sm:pb-0 border-[#E5E5E5] overflow-x-auto">
+          <div className="flex items-center gap-1 border-b sm:border-b-0 pb-2 sm:pb-0 border-line overflow-x-auto">
             <button
               onClick={() => setCategoryFilter('ALL')}
               className={`px-3 py-1.5 text-xs font-bold transition-colors ${
                 categoryFilter === 'ALL'
-                  ? 'bg-black text-white'
-                  : 'text-[#555555] hover:text-black'
+                  ? 'bg-fg text-bg'
+                  : 'text-muted hover:text-fg'
               }`}
             >
               All Categories
@@ -424,8 +451,8 @@ export default function StudioDashboard() {
               onClick={() => setCategoryFilter('AI_AUTOMATION')}
               className={`px-3 py-1.5 text-xs font-bold transition-colors ${
                 categoryFilter === 'AI_AUTOMATION'
-                  ? 'bg-black text-white'
-                  : 'text-[#555555] hover:text-black'
+                  ? 'bg-fg text-bg'
+                  : 'text-muted hover:text-fg'
               }`}
             >
               AI Automation
@@ -434,8 +461,8 @@ export default function StudioDashboard() {
               onClick={() => setCategoryFilter('WEB_DEVELOPMENT')}
               className={`px-3 py-1.5 text-xs font-bold transition-colors ${
                 categoryFilter === 'WEB_DEVELOPMENT'
-                  ? 'bg-black text-white'
-                  : 'text-[#555555] hover:text-black'
+                  ? 'bg-fg text-bg'
+                  : 'text-muted hover:text-fg'
               }`}
             >
               Web Development
@@ -449,13 +476,13 @@ export default function StudioDashboard() {
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Search by name or tag..."
-              className="border border-[#D5D5D5] focus:border-black px-3 py-1.5 text-xs outline-none w-48 sm:w-60"
+              className="border border-line-strong focus:border-fg px-3 py-1.5 text-xs outline-none w-48 sm:w-60"
             />
 
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value as any)}
-              className="border border-[#D5D5D5] focus:border-black px-2.5 py-1.5 text-xs outline-none bg-white font-medium"
+              className="border border-line-strong focus:border-fg px-2.5 py-1.5 text-xs outline-none bg-bg font-medium"
             >
               <option value="ALL">All Status</option>
               <option value="PUBLISHED">Published</option>
@@ -467,34 +494,34 @@ export default function StudioDashboard() {
 
         {/* ── Project Table / List ── */}
         {loading ? (
-          <div className="p-16 border border-[#E5E5E5] text-center text-xs font-bold text-[#777777]">
+          <div className="p-16 border border-line text-center text-xs font-bold text-muted">
             Loading studio projects from database...
           </div>
         ) : error ? (
-          <div className="p-8 border border-red-300 bg-red-50 text-red-700 text-xs">
+          <div className="p-8 border border-red-300 dark:border-red-900 bg-red-50 dark:bg-red-950/40 text-red-700 dark:text-red-400 text-xs">
             <p className="font-bold mb-1">Failed to load projects</p>
             <p>{error}</p>
             <button
               onClick={loadProjects}
-              className="mt-3 px-3 py-1 bg-black text-white text-xs font-bold"
+              className="mt-3 px-3 py-1 bg-fg text-bg text-xs font-bold"
             >
               Retry
             </button>
           </div>
         ) : filteredProjects.length === 0 ? (
-          <div className="p-16 border border-dashed border-[#CCCCCC] text-center">
-            <p className="text-sm font-bold text-black mb-1">No projects found</p>
-            <p className="text-xs text-[#777777] mb-4">
+          <div className="p-16 border border-dashed border-line-strong text-center">
+            <p className="text-sm font-bold text-fg mb-1">No projects found</p>
+            <p className="text-xs text-muted mb-4">
               {search || categoryFilter !== 'ALL' || statusFilter !== 'ALL'
                 ? 'Try clearing your filters or search term.'
                 : 'Click one of the buttons above to create your first project.'}
             </p>
           </div>
         ) : (
-          <div className="border border-[#E5E5E5] overflow-x-auto">
+          <div className="border border-line overflow-x-auto">
             <table className="w-full text-left border-collapse text-xs">
               <thead>
-                <tr className="border-b border-[#E5E5E5] bg-[#F9F9F9] text-[#555555] uppercase tracking-[0.1em] text-[10px]">
+                <tr className="border-b border-line bg-surface text-muted uppercase tracking-[0.1em] text-[10px]">
                   <th className="py-3 px-4 w-16">Cover</th>
                   <th className="py-3 px-4">Project Name</th>
                   <th className="py-3 px-4">Category</th>
@@ -504,7 +531,7 @@ export default function StudioDashboard() {
                   <th className="py-3 px-4 text-right">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-[#E5E5E5]">
+              <tbody className="divide-y divide-line">
                 {filteredProjects.map((project) => {
                   const coverImage =
                     project.images?.find((img) => img.is_primary)?.public_url ||
@@ -515,11 +542,11 @@ export default function StudioDashboard() {
                   return (
                     <tr
                       key={project.id}
-                      className="hover:bg-[#FAFAFA] transition-colors"
+                      className="hover:bg-surface transition-colors"
                     >
                       {/* Thumbnail */}
                       <td className="py-3 px-4">
-                        <div className="w-12 h-9 bg-[#EFEFEF] border border-[#DDDDDD] overflow-hidden flex items-center justify-center">
+                        <div className="w-12 h-9 bg-surface border border-line overflow-hidden flex items-center justify-center">
                           {coverImage ? (
                             <img
                               src={coverImage}
@@ -527,7 +554,7 @@ export default function StudioDashboard() {
                               className="w-full h-full object-cover"
                             />
                           ) : (
-                            <span className="text-[9px] text-[#AAAAAA] font-mono">
+                            <span className="text-[9px] text-faint font-mono">
                               {isAI ? 'n8n' : 'web'}
                             </span>
                           )}
@@ -536,15 +563,15 @@ export default function StudioDashboard() {
 
                       {/* Title & Slug */}
                       <td className="py-3 px-4">
-                        <p className="font-bold text-black text-sm">{project.title}</p>
-                        <p className="text-[11px] text-[#777777] font-mono">
+                        <p className="font-bold text-fg text-sm">{project.title}</p>
+                        <p className="text-[11px] text-muted font-mono">
                           /{project.slug}
                         </p>
                       </td>
 
                       {/* Category */}
                       <td className="py-3 px-4">
-                        <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 border border-[#E5E5E5] text-[#444444]">
+                        <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 border border-line text-muted">
                           {isAI ? 'AI Automation' : 'Web Dev'}
                         </span>
                       </td>
@@ -554,10 +581,10 @@ export default function StudioDashboard() {
                         <span
                           className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 border ${
                             project.status === 'PUBLISHED'
-                              ? 'border-black bg-black text-white'
+                              ? 'border-fg bg-fg text-bg'
                               : project.status === 'ARCHIVED'
-                              ? 'border-[#CCCCCC] text-[#888888]'
-                              : 'border-[#CCCCCC] bg-[#F5F5F5] text-[#555555]'
+                              ? 'border-line-strong text-faint'
+                              : 'border-line-strong bg-surface text-muted'
                           }`}
                         >
                           {project.status}
@@ -565,12 +592,12 @@ export default function StudioDashboard() {
                       </td>
 
                       {/* Sort Order */}
-                      <td className="py-3 px-4 font-mono text-[#555555]">
+                      <td className="py-3 px-4 font-mono text-muted">
                         {project.sort_order}
                       </td>
 
                       {/* Last Updated */}
-                      <td className="py-3 px-4 text-[#777777]">
+                      <td className="py-3 px-4 text-muted">
                         {project.updated_at
                           ? new Date(project.updated_at).toLocaleDateString()
                           : '—'}
@@ -582,7 +609,7 @@ export default function StudioDashboard() {
                           {/* Preview button */}
                           <button
                             onClick={() => setPreviewingProject(project)}
-                            className="px-2.5 py-1 border border-[#CCCCCC] hover:border-black text-black font-semibold"
+                            className="px-2.5 py-1 border border-line-strong hover:border-fg text-fg font-semibold"
                             title="Preview public design"
                           >
                             Preview
@@ -591,7 +618,7 @@ export default function StudioDashboard() {
                           {/* Edit button */}
                           <button
                             onClick={() => setEditingProject(project)}
-                            className="px-2.5 py-1 bg-black text-white hover:bg-[#333333] font-semibold"
+                            className="px-2.5 py-1 bg-fg text-bg hover:bg-muted font-semibold"
                           >
                             Edit
                           </button>
@@ -600,7 +627,7 @@ export default function StudioDashboard() {
                           <button
                             disabled={actionLoading}
                             onClick={() => handleToggleStatus(project)}
-                            className="px-2.5 py-1 border border-[#CCCCCC] hover:border-black text-black font-semibold"
+                            className="px-2.5 py-1 border border-line-strong hover:border-fg text-fg font-semibold"
                           >
                             {project.status === 'PUBLISHED' ? 'Unpublish' : 'Publish'}
                           </button>
@@ -609,7 +636,7 @@ export default function StudioDashboard() {
                           <button
                             disabled={actionLoading}
                             onClick={() => setDeletingId(project.id)}
-                            className="px-2 py-1 text-red-600 hover:bg-red-50 font-bold border border-transparent hover:border-red-200"
+                            className="px-2 py-1 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/40 font-bold border border-transparent hover:border-red-200"
                             title="Delete project"
                           >
                             ✕
@@ -634,17 +661,17 @@ export default function StudioDashboard() {
           role="dialog"
           aria-modal="true"
         >
-          <div className="bg-white border-2 border-black max-w-sm w-full p-6 text-black shadow-2xl">
+          <div className="bg-bg border-2 border-fg max-w-sm w-full p-6 text-fg shadow-2xl">
             <h3 className="text-base font-black uppercase tracking-wider mb-2">
               Confirm Permanent Delete
             </h3>
-            <p className="text-xs text-[#555555] mb-6 leading-relaxed">
+            <p className="text-xs text-muted mb-6 leading-relaxed">
               Are you sure you want to permanently delete this project and remove its associated images from storage? This cannot be undone.
             </p>
             <div className="flex items-center justify-end gap-3">
               <button
                 onClick={() => setDeletingId(null)}
-                className="px-4 py-2 border border-[#CCCCCC] text-xs font-bold"
+                className="px-4 py-2 border border-line-strong text-xs font-bold"
               >
                 Cancel
               </button>
@@ -694,7 +721,7 @@ export default function StudioDashboard() {
       )}
 
       {/* Footer */}
-      <footer className="border-t border-[#E5E5E5] py-4 px-6 text-center text-xs text-[#888888]">
+      <footer className="border-t border-line py-4 px-6 text-center text-xs text-faint">
         Private Owner Studio &bull; Oluwaseyi Portfolio CMS &bull; Connected to dedicated Supabase
       </footer>
     </div>

@@ -7,12 +7,12 @@ export default function RequireOwnerAuth({ children }: { children: ReactNode }) 
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-white flex items-center justify-center p-6">
+      <div className="min-h-screen bg-bg flex items-center justify-center p-6">
         <div className="text-center">
-          <p className="text-xs font-bold uppercase tracking-[0.2em] text-[#555555] mb-2">
+          <p className="text-xs font-bold uppercase tracking-[0.2em] text-muted mb-2">
             Oluwaseyi Studio
           </p>
-          <p className="text-sm font-semibold text-black">Verifying owner credentials...</p>
+          <p className="text-sm font-semibold text-fg">Verifying owner credentials...</p>
         </div>
       </div>
     )

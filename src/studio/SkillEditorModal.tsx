@@ -84,19 +84,19 @@ export default function SkillEditorModal({ initialSkill, nextSortOrder, onClose,
       aria-modal="true"
       aria-label={isEditing ? 'Edit skill' : 'Add skill'}
     >
-      <div className="bg-white text-black border-2 border-black w-full max-w-md shadow-2xl">
-        <div className="px-6 py-4 border-b border-[#E5E5E5] flex items-center justify-between">
+      <div className="bg-bg text-fg border-2 border-fg w-full max-w-md shadow-2xl">
+        <div className="px-6 py-4 border-b border-line flex items-center justify-between">
           <h3 className="text-sm font-black uppercase tracking-wider">
             {isEditing ? 'Edit Skill' : 'Add Skill'}
           </h3>
-          <button onClick={onClose} disabled={submitting} className="text-xs font-bold text-[#555555] hover:text-black">
+          <button onClick={onClose} disabled={submitting} className="text-xs font-bold text-muted hover:text-fg">
             Close
           </button>
         </div>
 
         <div className="px-6 py-5 space-y-5">
           {error && (
-            <div role="alert" className="border border-red-600 bg-red-50 text-red-700 text-xs px-3 py-2">
+            <div role="alert" className="border border-red-600 bg-red-50 dark:bg-red-950/40 text-red-700 dark:text-red-400 text-xs px-3 py-2">
               {error}
             </div>
           )}
@@ -110,7 +110,7 @@ export default function SkillEditorModal({ initialSkill, nextSortOrder, onClose,
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="e.g. Figma"
-              className="w-full border border-[#CCCCCC] px-3 py-2 text-sm focus:outline-none focus:border-black"
+              className="w-full border border-line-strong px-3 py-2 text-sm focus:outline-none focus:border-fg"
               autoFocus
             />
           </div>
@@ -129,20 +129,20 @@ export default function SkillEditorModal({ initialSkill, nextSortOrder, onClose,
                 pickFile(e.dataTransfer.files?.[0])
               }}
               className={`flex items-center gap-4 border border-dashed p-4 ${
-                dragActive ? 'border-black bg-[#F5F5F5]' : 'border-[#CCCCCC]'
+                dragActive ? 'border-fg bg-surface' : 'border-line-strong'
               }`}
             >
-              <span className="flex h-14 w-14 flex-shrink-0 items-center justify-center rounded-xl border border-[#E5E5E5] bg-[#F5F5F5]">
+              <span className="flex h-14 w-14 flex-shrink-0 items-center justify-center rounded-xl border border-line bg-surface">
                 {previewUrl ? (
                   <img src={previewUrl} alt="" className="h-9 w-9 object-contain" />
                 ) : (
-                  <span className="text-xs text-[#888888]">None</span>
+                  <span className="text-xs text-faint">None</span>
                 )}
               </span>
-              <div className="text-xs text-[#555555] space-y-2">
+              <div className="text-xs text-muted space-y-2">
                 <p>Drop a square logo here (PNG, SVG, WebP) or</p>
                 <div className="flex items-center gap-3">
-                  <label className="cursor-pointer px-3 py-1.5 border border-black font-bold text-black hover:bg-black hover:text-white transition-colors">
+                  <label className="cursor-pointer px-3 py-1.5 border border-fg font-bold text-fg hover:bg-fg hover:text-bg transition-colors">
                     Choose file
                     <input
                       type="file"
@@ -170,14 +170,14 @@ export default function SkillEditorModal({ initialSkill, nextSortOrder, onClose,
           </label>
         </div>
 
-        <div className="px-6 py-4 border-t border-[#E5E5E5] flex items-center justify-end gap-3">
-          <button onClick={onClose} disabled={submitting} className="px-4 py-2 border border-[#CCCCCC] text-xs font-bold">
+        <div className="px-6 py-4 border-t border-line flex items-center justify-end gap-3">
+          <button onClick={onClose} disabled={submitting} className="px-4 py-2 border border-line-strong text-xs font-bold">
             Cancel
           </button>
           <button
             onClick={handleSave}
             disabled={submitting}
-            className="px-4 py-2 bg-black text-white text-xs font-bold border border-black hover:bg-white hover:text-black transition-colors disabled:opacity-50"
+            className="px-4 py-2 bg-fg text-bg text-xs font-bold border border-fg hover:bg-bg hover:text-fg transition-colors disabled:opacity-50"
           >
             {submitting ? 'Saving…' : isEditing ? 'Save Changes' : 'Add Skill'}
           </button>

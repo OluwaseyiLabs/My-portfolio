@@ -602,6 +602,60 @@ export async function fetchInquiries(): Promise<PortfolioInquiry[]> {
 }
 
 
+// ── Workflow errors (n8n failures reported into the Studio error dashboard) ──────────────────────────────
+
+export type WorkflowErrorKind = 'CREDENTIALS' | 'EMAIL' | 'WORKFLOW'
+
+export interface WorkflowError {
+  id: string
+  workflow_name: string
+  node_name: string | null
+  kind: WorkflowErrorKind
+  message: string
+  details: string | null
+  execution_id: string | null
+  execution_url: string | null
+  occurrences: number
+  first_seen_at: string
+  last_seen_at: string
+  resolved_at: string | null
+}
+
+/** Owner only (row level security). Returns the newest 200 errors, open and resolved. */
+export async function fetchWorkflowErrors(): Promise<WorkflowError[]> {
+  const { data, error } = await supabase
+    .from('portfolio_workflow_errors')
+    .select('*')
+    .order('last_seen_at', { ascending: false })
+    .limit(200)
+  if (error) throw new Error(error.message)
+  return (data as WorkflowError[]) || []
+}
+
+/** Number of unresolved errors, for the tab badge. Returns null if it cannot be read. */
+export async function countOpenWorkflowErrors(): Promise<number | null> {
+  const { count, error } = await supabase
+    .from('portfolio_workflow_errors')
+    .select('id', { count: 'exact', head: true })
+    .is('resolved_at', null)
+  if (error) return null
+  return count ?? 0
+}
+
+export async function setWorkflowErrorResolved(ids: string[], resolved: boolean): Promise<void> {
+  if (ids.length === 0) return
+  const { error } = await supabase
+    .from('portfolio_workflow_errors')
+    .update({ resolved_at: resolved ? new Date().toISOString() : null })
+    .in('id', ids)
+  if (error) throw new Error(error.message)
+}
+
+export async function deleteWorkflowErrors(ids: string[]): Promise<void> {
+  if (ids.length === 0) return
+  const { error } = await supabase.from('portfolio_workflow_errors').delete().in('id', ids)
+  if (error) throw new Error(error.message)
+}
 
 // ── Skills ────────────────────────────────────────────────────────────────────
 

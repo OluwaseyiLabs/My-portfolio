@@ -473,21 +473,21 @@ export default function ProjectEditorModal({
         role="dialog"
         aria-modal="true"
       >
-        <div className="relative w-full max-w-3xl bg-white text-black max-h-[92vh] flex flex-col shadow-2xl">
+        <div className="relative w-full max-w-3xl bg-bg text-fg max-h-[92dvh] flex flex-col shadow-2xl">
           {/* Header */}
-          <div className="sticky top-0 z-10 bg-white border-b border-[#E5E5E5] px-6 py-4 flex items-center justify-between">
+          <div className="sticky top-0 z-10 bg-bg border-b border-line px-6 py-4 flex items-center justify-between">
             <div>
-              <span className="text-[10px] font-bold tracking-[0.2em] uppercase text-[#777777]">
+              <span className="text-[10px] font-bold tracking-[0.2em] uppercase text-muted">
                 {isAI ? 'Category A: AI Automation' : 'Category B: Web Design & Development'}
               </span>
-              <h2 className="text-xl font-black text-black">
+              <h2 className="text-xl font-black text-fg">
                 {isEditing ? `Edit: ${title || 'Project'}` : isAI ? 'Add AI Automation Project' : 'Add Website Project'}
               </h2>
             </div>
             <button
               onClick={onClose}
               disabled={submitting}
-              className="w-8 h-8 flex items-center justify-center border border-[#E5E5E5] hover:border-black text-xs font-bold transition-colors"
+              className="w-8 h-8 flex items-center justify-center border border-line hover:border-fg text-xs font-bold transition-colors"
             >
               ✕
             </button>
@@ -499,25 +499,25 @@ export default function ProjectEditorModal({
               <div
                 ref={errorRef}
                 role="alert"
-                className="p-4 bg-red-50 border-l-4 border-red-600 text-xs font-semibold text-red-700"
+                className="p-4 bg-red-50 dark:bg-red-950/40 border-l-4 border-red-600 text-xs font-semibold text-red-700 dark:text-red-400"
               >
                 {submitError}
               </div>
             )}
 
             {/* Category Selector Dropdown */}
-            <div className="border border-[#E5E5E5] bg-[#FBFBFB] p-4">
-              <label className="block text-xs font-bold uppercase tracking-[0.12em] text-black mb-1">
+            <div className="border border-line bg-surface p-4">
+              <label className="block text-xs font-bold uppercase tracking-[0.12em] text-fg mb-1">
                 Project Category Sector *
               </label>
-              <p className="text-[11px] text-[#666666] mb-3 leading-relaxed">
+              <p className="text-[11px] text-muted mb-3 leading-relaxed">
                 Choose the sector where this project belongs. Switching categories dynamically updates the form fields and saves the project directly into that sector on the public portfolio.
               </p>
               <div className="relative">
                 <select
                   value={category}
                   onChange={(e) => setCategory(e.target.value as ProjectCategory)}
-                  className="w-full border border-[#D5D5D5] focus:border-black px-4 py-2.5 text-sm font-bold bg-white outline-none cursor-pointer appearance-none transition-colors"
+                  className="w-full border border-line-strong focus:border-fg px-4 py-2.5 text-sm font-bold bg-bg outline-none cursor-pointer appearance-none transition-colors"
                 >
                   <option value="AI_AUTOMATION">
                     AI Automation Sector (Workflows, AI Agents, n8n Systems)
@@ -526,7 +526,7 @@ export default function ProjectEditorModal({
                     Web Design &amp; Development Sector (Websites, Apps, E-commerce)
                   </option>
                 </select>
-                <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3.5 text-black">
+                <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3.5 text-fg">
                   <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
                     <path d="M3 5l4 4 4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
                   </svg>
@@ -537,7 +537,7 @@ export default function ProjectEditorModal({
             {/* 1. Name & Slug */}
             <div className="grid sm:grid-cols-2 gap-4">
               <div>
-                <label className="block text-xs font-bold uppercase tracking-[0.1em] text-black mb-1.5">
+                <label className="block text-xs font-bold uppercase tracking-[0.1em] text-fg mb-1.5">
                   {isAI ? 'Workflow Name *' : 'Website Name *'}
                 </label>
                 <input
@@ -550,27 +550,27 @@ export default function ProjectEditorModal({
                       ? "e.g. Safe Haven Properties — Lead Management"
                       : "e.g. VoltEdge Tech & Accessories"
                   }
-                  className="w-full border border-[#D5D5D5] focus:border-black px-3.5 py-2.5 text-sm outline-none transition-colors"
+                  className="w-full border border-line-strong focus:border-fg px-3.5 py-2.5 text-sm outline-none transition-colors"
                 />
               </div>
 
               <div>
                 <div className="flex items-center justify-between mb-1.5">
-                  <label className="block text-xs font-bold uppercase tracking-[0.1em] text-black">
+                  <label className="block text-xs font-bold uppercase tracking-[0.1em] text-fg">
                     URL Slug *
                   </label>
                   {slugStatus === 'available' && slug.trim() && (
-                    <span className="text-[10px] text-green-700 font-bold uppercase tracking-wider">
+                    <span className="text-[10px] text-green-700 dark:text-green-400 font-bold uppercase tracking-wider">
                       ✓ Available
                     </span>
                   )}
                   {slugStatus === 'taken' && (
-                    <span className="text-[10px] text-red-600 font-bold uppercase tracking-wider">
+                    <span className="text-[10px] text-red-600 dark:text-red-400 font-bold uppercase tracking-wider">
                       ⚠ Taken
                     </span>
                   )}
                   {slugStatus === 'checking' && (
-                    <span className="text-[10px] text-[#777777] uppercase tracking-wider animate-pulse">
+                    <span className="text-[10px] text-muted uppercase tracking-wider animate-pulse">
                       Checking...
                     </span>
                   )}
@@ -586,13 +586,13 @@ export default function ProjectEditorModal({
                   placeholder="e.g. voltedge-accessories"
                   className={`w-full border px-3.5 py-2.5 text-sm outline-none transition-colors ${
                     slugStatus === 'taken'
-                      ? 'border-red-500 focus:border-red-600 bg-red-50/30'
-                      : 'border-[#D5D5D5] focus:border-black'
+                      ? 'border-red-500 focus:border-red-600 bg-red-50/30 dark:bg-red-950/30'
+                      : 'border-line-strong focus:border-fg'
                   }`}
                 />
                 {slugStatus === 'taken' && (
-                  <div className="mt-1.5 p-2.5 bg-red-50 border border-red-200 text-xs flex flex-wrap items-center justify-between gap-2">
-                    <span className="text-red-700 font-medium">
+                  <div className="mt-1.5 p-2.5 bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-900 text-xs flex flex-wrap items-center justify-between gap-2">
+                    <span className="text-red-700 dark:text-red-400 font-medium">
                       This slug is already used by another project.
                     </span>
                     {suggestedSlug && (
@@ -602,7 +602,7 @@ export default function ProjectEditorModal({
                           setSlug(suggestedSlug)
                           setSubmitError(null)
                         }}
-                        className="px-2.5 py-1 bg-black text-white text-[11px] font-bold hover:bg-[#333333] transition-colors whitespace-nowrap"
+                        className="px-2.5 py-1 bg-fg text-bg text-[11px] font-bold hover:bg-muted transition-colors whitespace-nowrap"
                       >
                         Use &ldquo;{suggestedSlug}&rdquo; →
                       </button>
@@ -616,10 +616,10 @@ export default function ProjectEditorModal({
             {isAI && (
               <>
                 <div>
-                  <label className="block text-xs font-bold uppercase tracking-[0.1em] text-black mb-1.5">
+                  <label className="block text-xs font-bold uppercase tracking-[0.1em] text-fg mb-1.5">
                     Core Challenge *
                   </label>
-                  <p className="text-[11px] text-[#666666] mb-2">
+                  <p className="text-[11px] text-muted mb-2">
                     Explain the problem or operational bottleneck the business was experiencing.
                   </p>
                   <textarea
@@ -627,15 +627,15 @@ export default function ProjectEditorModal({
                     value={coreChallenge}
                     onChange={(e) => setCoreChallenge(e.target.value)}
                     placeholder="Describe the friction, manual work, delays, or challenges..."
-                    className="w-full border border-[#D5D5D5] focus:border-black p-3 text-sm outline-none transition-colors resize-y"
+                    className="w-full border border-line-strong focus:border-fg p-3 text-sm outline-none transition-colors resize-y"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold uppercase tracking-[0.1em] text-black mb-1.5">
+                  <label className="block text-xs font-bold uppercase tracking-[0.1em] text-fg mb-1.5">
                     Solution Delivered *
                   </label>
-                  <p className="text-[11px] text-[#666666] mb-2">
+                  <p className="text-[11px] text-muted mb-2">
                     Describe how the automation workflow was built and how it solves the challenge.
                   </p>
                   <textarea
@@ -643,7 +643,7 @@ export default function ProjectEditorModal({
                     value={solutionDelivered}
                     onChange={(e) => setSolutionDelivered(e.target.value)}
                     placeholder="Describe the n8n workflows, AI agent triggers, integrations..."
-                    className="w-full border border-[#D5D5D5] focus:border-black p-3 text-sm outline-none transition-colors resize-y"
+                    className="w-full border border-line-strong focus:border-fg p-3 text-sm outline-none transition-colors resize-y"
                   />
                 </div>
               </>
@@ -651,7 +651,7 @@ export default function ProjectEditorModal({
 
             {/* Web Development / Shared: Short Description */}
             <div>
-              <label className="block text-xs font-bold uppercase tracking-[0.1em] text-black mb-1.5">
+              <label className="block text-xs font-bold uppercase tracking-[0.1em] text-fg mb-1.5">
                 {isAI ? 'Subtitle / Summary (Optional)' : 'Short Description (Optional)'}
               </label>
               <input
@@ -659,13 +659,13 @@ export default function ProjectEditorModal({
                 value={shortDescription}
                 onChange={(e) => setShortDescription(e.target.value)}
                 placeholder="A concise 1-2 sentence overview of the project..."
-                className="w-full border border-[#D5D5D5] focus:border-black px-3.5 py-2.5 text-sm outline-none transition-colors"
+                className="w-full border border-line-strong focus:border-fg px-3.5 py-2.5 text-sm outline-none transition-colors"
               />
             </div>
 
             {/* Website URL */}
             <div>
-              <label className="block text-xs font-bold uppercase tracking-[0.1em] text-black mb-1.5">
+              <label className="block text-xs font-bold uppercase tracking-[0.1em] text-fg mb-1.5">
                 {isAI ? 'Project / Live Demo URL (Optional)' : 'Live Website URL (Optional)'}
               </label>
               <input
@@ -673,38 +673,38 @@ export default function ProjectEditorModal({
                 value={projectUrl}
                 onChange={(e) => setProjectUrl(e.target.value)}
                 placeholder="https://..."
-                className="w-full border border-[#D5D5D5] focus:border-black px-3.5 py-2.5 text-sm outline-none transition-colors"
+                className="w-full border border-line-strong focus:border-fg px-3.5 py-2.5 text-sm outline-none transition-colors"
               />
             </div>
 
             {/* Case study details + sections (both categories) */}
             {(
               <>
-                <div className="pt-2 border-t border-[#E5E5E5]">
-                  <p className="text-xs font-bold uppercase tracking-[0.1em] text-black">Case Study Details</p>
-                  <p className="text-[11px] text-[#666666] mt-0.5 mb-3">
+                <div className="pt-2 border-t border-line">
+                  <p className="text-xs font-bold uppercase tracking-[0.1em] text-fg">Case Study Details</p>
+                  <p className="text-[11px] text-muted mt-0.5 mb-3">
                     Shown at the top of the project page when someone clicks &ldquo;View Project&rdquo;.
                   </p>
                   <div className="grid sm:grid-cols-3 gap-4">
                     <div>
-                      <label className="block text-[11px] font-bold uppercase tracking-wider text-black mb-1">Year</label>
+                      <label className="block text-[11px] font-bold uppercase tracking-wider text-fg mb-1">Year</label>
                       <input type="text" value={year} onChange={(e) => setYear(e.target.value)} placeholder="2026"
-                        className="w-full border border-[#D5D5D5] focus:border-black px-3 py-2 text-sm outline-none" />
+                        className="w-full border border-line-strong focus:border-fg px-3 py-2 text-sm outline-none" />
                     </div>
                     <div>
-                      <label className="block text-[11px] font-bold uppercase tracking-wider text-black mb-1">Role</label>
+                      <label className="block text-[11px] font-bold uppercase tracking-wider text-fg mb-1">Role</label>
                       <input type="text" value={role} onChange={(e) => setRole(e.target.value)} placeholder="Designer & Developer"
-                        className="w-full border border-[#D5D5D5] focus:border-black px-3 py-2 text-sm outline-none" />
+                        className="w-full border border-line-strong focus:border-fg px-3 py-2 text-sm outline-none" />
                     </div>
                     <div>
-                      <label htmlFor="platform-select" className="block text-[11px] font-bold uppercase tracking-wider text-black mb-1">
+                      <label htmlFor="platform-select" className="block text-[11px] font-bold uppercase tracking-wider text-fg mb-1">
                         Platform
                       </label>
                       <select
                         id="platform-select"
                         value={PLATFORM_OPTIONS.includes(platform) ? platform : platform ? OTHER_PLATFORM : ''}
                         onChange={(e) => setPlatform(e.target.value === OTHER_PLATFORM ? ' ' : e.target.value)}
-                        className="w-full border border-[#D5D5D5] focus:border-black px-3 py-2 text-sm outline-none bg-white cursor-pointer"
+                        className="w-full border border-line-strong focus:border-fg px-3 py-2 text-sm outline-none bg-bg cursor-pointer"
                       >
                         <option value="">Not set</option>
                         {PLATFORM_OPTIONS.map((p) => (
@@ -719,27 +719,27 @@ export default function ProjectEditorModal({
                           onChange={(e) => setPlatform(e.target.value)}
                           placeholder="Type the platform"
                           autoFocus
-                          className="mt-2 w-full border border-[#D5D5D5] focus:border-black px-3 py-2 text-sm outline-none"
+                          className="mt-2 w-full border border-line-strong focus:border-fg px-3 py-2 text-sm outline-none"
                         />
                       )}
-                      <p className="text-[11px] text-[#777777] mt-1">
+                      <p className="text-[11px] text-muted mt-1">
                         {isAI ? 'What the automation runs for: a web app, a mobile app, a website…' : 'What the project is: a web app, a mobile app, a website…'}
                       </p>
                     </div>
                   </div>
                   <div className="mt-4">
-                    <label className="block text-[11px] font-bold uppercase tracking-wider text-black mb-1">Tools used</label>
+                    <label className="block text-[11px] font-bold uppercase tracking-wider text-fg mb-1">Tools used</label>
                     <input type="text" value={toolsInput} onChange={(e) => setToolsInput(e.target.value)}
                       placeholder={isAI ? "n8n, Webhook, Google Sheets, Gmail" : "Figma, React, Supabase, Claude Code"}
-                      className="w-full border border-[#D5D5D5] focus:border-black px-3 py-2 text-sm outline-none" />
-                    <p className="text-[11px] text-[#777777] mt-1">
+                      className="w-full border border-line-strong focus:border-fg px-3 py-2 text-sm outline-none" />
+                    <p className="text-[11px] text-muted mt-1">
                       Separate with commas. The icon appears automatically for well-known tools (n8n, Figma, React, Google Sheets, Supabase and many more). An icon you upload in the Skills tab takes priority.
                     </p>
                   </div>
                 </div>
 
                 {sectionsLoading ? (
-                  <p className="text-xs text-[#777777]">Loading case study sections…</p>
+                  <p className="text-xs text-muted">Loading case study sections…</p>
                 ) : (
                   <SectionsEditor
                     sections={sections}
@@ -751,34 +751,34 @@ export default function ProjectEditorModal({
             )}
 
             {/* Sort Order & Featured */}
-            <div className="flex flex-wrap items-center gap-6 pt-2 border-t border-[#E5E5E5]">
+            <div className="flex flex-wrap items-center gap-6 pt-2 border-t border-line">
               <div className="flex items-center gap-2">
-                <label className="text-xs font-bold uppercase tracking-[0.1em] text-black">
+                <label className="text-xs font-bold uppercase tracking-[0.1em] text-fg">
                   Display Order:
                 </label>
                 <input
                   type="number"
                   value={sortOrder}
                   onChange={(e) => setSortOrder(parseInt(e.target.value) || 0)}
-                  className="w-20 border border-[#D5D5D5] focus:border-black px-2.5 py-1.5 text-xs text-center outline-none"
+                  className="w-20 border border-line-strong focus:border-fg px-2.5 py-1.5 text-xs text-center outline-none"
                 />
               </div>
 
-              <label className="flex items-center gap-2 text-xs font-bold text-black cursor-pointer select-none">
+              <label className="flex items-center gap-2 text-xs font-bold text-fg cursor-pointer select-none">
                 <input
                   type="checkbox"
                   checked={featured}
                   onChange={(e) => setFeatured(e.target.checked)}
-                  className="w-4 h-4 accent-black"
+                  className="w-4 h-4 accent-fg"
                 />
                 Feature on Public Portfolio
               </label>
             </div>
 
             {/* Project video */}
-            <div className="pt-2 border-t border-[#E5E5E5]">
-              <p className="text-xs font-bold uppercase tracking-[0.1em] text-black">Project Video (Optional)</p>
-              <p className="text-[11px] text-[#666666] mt-0.5 mb-3 leading-relaxed">
+            <div className="pt-2 border-t border-line">
+              <p className="text-xs font-bold uppercase tracking-[0.1em] text-fg">Project Video (Optional)</p>
+              <p className="text-[11px] text-muted mt-0.5 mb-3 leading-relaxed">
                 Upload a short clip (MP4, WebM or MOV, up to 50 MB) or paste a direct video link. Set it as the cover
                 and it plays by itself, muted and looping, when a visitor scrolls to it.
               </p>
@@ -789,12 +789,12 @@ export default function ProjectEditorModal({
                   controls
                   muted
                   playsInline
-                  className="w-full max-w-md border border-[#D5D5D5] bg-black mb-3"
+                  className="w-full max-w-md border border-line-strong bg-fg mb-3"
                 />
               )}
 
               <div className="flex flex-wrap items-center gap-3">
-                <label className="cursor-pointer px-3 py-2 border border-black text-xs font-bold hover:bg-black hover:text-white transition-colors">
+                <label className="cursor-pointer px-3 py-2 border border-fg text-xs font-bold hover:bg-fg hover:text-bg transition-colors">
                   {videoPreview ? 'Replace video file' : 'Upload video file'}
                   <input
                     type="file"
@@ -807,14 +807,14 @@ export default function ProjectEditorModal({
                   />
                 </label>
                 {videoPreview && (
-                  <button type="button" onClick={clearVideo} className="text-xs font-bold underline text-red-600">
+                  <button type="button" onClick={clearVideo} className="text-xs font-bold underline text-red-600 dark:text-red-400">
                     Remove video
                   </button>
                 )}
               </div>
 
               <div className="mt-3">
-                <label className="block text-[11px] font-bold uppercase tracking-wider text-black mb-1">
+                <label className="block text-[11px] font-bold uppercase tracking-wider text-fg mb-1">
                   Or paste a video link
                 </label>
                 <input
@@ -826,36 +826,36 @@ export default function ProjectEditorModal({
                     setVideoPreview(e.target.value.trim())
                   }}
                   placeholder="https://.../clip.mp4"
-                  className="w-full border border-[#D5D5D5] focus:border-black px-3 py-2 text-sm outline-none"
+                  className="w-full border border-line-strong focus:border-fg px-3 py-2 text-sm outline-none"
                 />
               </div>
 
-              <label className="mt-3 flex items-center gap-2 text-xs font-bold text-black cursor-pointer select-none">
+              <label className="mt-3 flex items-center gap-2 text-xs font-bold text-fg cursor-pointer select-none">
                 <input
                   type="checkbox"
                   checked={videoIsCover}
                   disabled={!videoPreview}
                   onChange={(e) => setVideoIsCover(e.target.checked)}
-                  className="w-4 h-4 accent-black"
+                  className="w-4 h-4 accent-fg"
                 />
                 Use this video as the project cover (autoplays when scrolled into view)
               </label>
             </div>
 
             {/* Image Upload Component */}
-            <div className="pt-2 border-t border-[#E5E5E5]">
+            <div className="pt-2 border-t border-line">
               <div className="flex items-center justify-between mb-2">
                 <div>
-                  <label className="block text-xs font-bold uppercase tracking-[0.1em] text-black">
+                  <label className="block text-xs font-bold uppercase tracking-[0.1em] text-fg">
                     {isAI ? 'Workflow Images *' : 'Website Screenshots *'}
                   </label>
-                  <p className="text-[11px] text-[#666666]">
+                  <p className="text-[11px] text-muted">
                     {isAI
                       ? 'Upload multiple screenshots of your workflow (n8n canvas, nodes, integrations).'
                       : 'Upload website screenshots. The primary one will be used in the showcase.'}
                   </p>
                 </div>
-                <span className="text-xs text-[#777777] font-mono">
+                <span className="text-xs text-muted font-mono">
                   {images.length} {images.length === 1 ? 'image' : 'images'}
                 </span>
               </div>
@@ -866,7 +866,7 @@ export default function ProjectEditorModal({
                 onDragLeave={onDragLeave}
                 onDrop={onDrop}
                 className={`border-2 border-dashed p-6 text-center cursor-pointer transition-colors ${
-                  dragActive ? 'border-black bg-[#F5F5F5]' : 'border-[#CCCCCC] hover:border-black'
+                  dragActive ? 'border-fg bg-surface' : 'border-line-strong hover:border-fg'
                 }`}
                 onClick={() => document.getElementById('image-upload-input')?.click()}
               >
@@ -885,16 +885,16 @@ export default function ProjectEditorModal({
                   fill="none"
                   stroke="currentColor"
                   strokeWidth="1.5"
-                  className="mx-auto mb-2 text-[#777777]"
+                  className="mx-auto mb-2 text-muted"
                 >
                   <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
                   <polyline points="17 8 12 3 7 8" />
                   <line x1="12" y1="3" x2="12" y2="15" />
                 </svg>
-                <p className="text-xs font-bold text-black mb-1">
+                <p className="text-xs font-bold text-fg mb-1">
                   Click to choose images or drag &amp; drop here
                 </p>
-                <p className="text-[11px] text-[#777777]">
+                <p className="text-[11px] text-muted">
                   Supports PNG, JPEG, WebP, AVIF &amp; SVG (Max 20MB per image)
                 </p>
               </div>
@@ -906,18 +906,18 @@ export default function ProjectEditorModal({
                     <div
                       key={item.id}
                       className={`flex flex-col sm:flex-row items-start sm:items-center gap-4 p-3 border transition-colors ${
-                        item.isPrimary ? 'border-black bg-[#FBFBFB]' : 'border-[#E5E5E5]'
+                        item.isPrimary ? 'border-fg bg-surface' : 'border-line'
                       }`}
                     >
                       {/* Thumbnail */}
-                      <div className="relative w-24 h-16 bg-[#EEEEEE] flex-shrink-0 overflow-hidden border border-[#DDDDDD]">
+                      <div className="relative w-24 h-16 bg-surface flex-shrink-0 overflow-hidden border border-line">
                         <img
                           src={item.previewUrl}
                           alt={item.altText}
                           className="w-full h-full object-cover"
                         />
                         {item.isPrimary && (
-                          <span className="absolute bottom-0 left-0 right-0 bg-black text-white text-[9px] font-black uppercase tracking-wider text-center py-0.5">
+                          <span className="absolute bottom-0 left-0 right-0 bg-fg text-bg text-[9px] font-black uppercase tracking-wider text-center py-0.5">
                             Cover
                           </span>
                         )}
@@ -930,14 +930,14 @@ export default function ProjectEditorModal({
                           value={item.caption}
                           onChange={(e) => updateImageField(idx, 'caption', e.target.value)}
                           placeholder="Optional caption (e.g. n8n Main Webhook trigger)"
-                          className="w-full border border-[#E0E0E0] focus:border-black px-2.5 py-1 text-xs outline-none"
+                          className="w-full border border-line focus:border-fg px-2.5 py-1 text-xs outline-none"
                         />
                         <input
                           type="text"
                           value={item.altText}
                           onChange={(e) => updateImageField(idx, 'altText', e.target.value)}
                           placeholder="Alt text for accessibility..."
-                          className="w-full border border-[#E0E0E0] focus:border-black px-2.5 py-1 text-xs outline-none text-[#555555]"
+                          className="w-full border border-line focus:border-fg px-2.5 py-1 text-xs outline-none text-muted"
                         />
                       </div>
 
@@ -948,7 +948,7 @@ export default function ProjectEditorModal({
                           <button
                             type="button"
                             onClick={() => setPrimaryImage(idx)}
-                            className="px-2 py-1 text-[10px] font-bold border border-[#CCCCCC] hover:border-black text-black"
+                            className="px-2 py-1 text-[10px] font-bold border border-line-strong hover:border-fg text-fg"
                             title="Set as primary cover image"
                           >
                             Set Cover
@@ -960,7 +960,7 @@ export default function ProjectEditorModal({
                           type="button"
                           disabled={idx === 0}
                           onClick={() => moveImage(idx, 'up')}
-                          className="w-7 h-7 flex items-center justify-center border border-[#CCCCCC] hover:border-black text-xs disabled:opacity-30"
+                          className="w-7 h-7 flex items-center justify-center border border-line-strong hover:border-fg text-xs disabled:opacity-30"
                           title="Move earlier"
                         >
                           ↑
@@ -971,7 +971,7 @@ export default function ProjectEditorModal({
                           type="button"
                           disabled={idx === images.length - 1}
                           onClick={() => moveImage(idx, 'down')}
-                          className="w-7 h-7 flex items-center justify-center border border-[#CCCCCC] hover:border-black text-xs disabled:opacity-30"
+                          className="w-7 h-7 flex items-center justify-center border border-line-strong hover:border-fg text-xs disabled:opacity-30"
                           title="Move later"
                         >
                           ↓
@@ -981,7 +981,7 @@ export default function ProjectEditorModal({
                         <button
                           type="button"
                           onClick={() => removeImage(idx)}
-                          className="w-7 h-7 flex items-center justify-center border border-red-300 hover:bg-red-50 text-red-600 text-xs font-bold"
+                          className="w-7 h-7 flex items-center justify-center border border-red-300 dark:border-red-900 hover:bg-red-50 dark:hover:bg-red-950/40 text-red-600 dark:text-red-400 text-xs font-bold"
                           title="Remove image"
                         >
                           ✕
@@ -995,9 +995,9 @@ export default function ProjectEditorModal({
           </div>
 
           {/* Action Bar */}
-          <div className="sticky bottom-0 z-10 bg-white border-t border-[#E5E5E5] px-6 py-4 flex flex-col gap-3">
+          <div className="sticky bottom-0 z-10 bg-bg border-t border-line px-6 py-4 flex flex-col gap-3">
             {submitError && (
-              <p role="alert" className="text-xs font-semibold text-red-700 bg-red-50 border border-red-200 px-3 py-2">
+              <p role="alert" className="text-xs font-semibold text-red-700 dark:text-red-400 bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-900 px-3 py-2">
                 {submitError}
               </p>
             )}
@@ -1006,7 +1006,7 @@ export default function ProjectEditorModal({
               type="button"
               disabled={submitting}
               onClick={() => setShowPreview(true)}
-              className="px-4 py-2 border border-black text-black text-xs font-bold uppercase hover:bg-black hover:text-white transition-colors"
+              className="px-4 py-2 border border-fg text-fg text-xs font-bold uppercase hover:bg-fg hover:text-bg transition-colors"
             >
               Live Preview ↗
             </button>
@@ -1016,7 +1016,7 @@ export default function ProjectEditorModal({
                 type="button"
                 disabled={submitting}
                 onClick={onClose}
-                className="px-4 py-2 text-xs font-semibold text-[#555555] hover:text-black"
+                className="px-4 py-2 text-xs font-semibold text-muted hover:text-fg"
               >
                 Cancel
               </button>
@@ -1025,7 +1025,7 @@ export default function ProjectEditorModal({
                 type="button"
                 disabled={submitting}
                 onClick={() => handleSave('DRAFT')}
-                className="px-4 py-2 border border-[#CCCCCC] hover:border-black text-xs font-bold text-black transition-colors disabled:opacity-50"
+                className="px-4 py-2 border border-line-strong hover:border-fg text-xs font-bold text-fg transition-colors disabled:opacity-50"
               >
                 {submitting ? 'Saving...' : 'Save as Draft'}
               </button>
@@ -1034,7 +1034,7 @@ export default function ProjectEditorModal({
                 type="button"
                 disabled={submitting}
                 onClick={() => handleSave('PUBLISHED')}
-                className="px-5 py-2 bg-black text-white text-xs font-bold uppercase tracking-wider border border-black hover:bg-white hover:text-black transition-colors disabled:opacity-50"
+                className="px-5 py-2 bg-fg text-bg text-xs font-bold uppercase tracking-wider border border-fg hover:bg-bg hover:text-fg transition-colors disabled:opacity-50"
               >
                 {submitting ? 'Saving...' : 'Publish to Portfolio →'}
               </button>

@@ -44,7 +44,7 @@ function niceAxis(max: number) {
 }
 
 // ── Small building blocks ────────────────────────────────────────────────────
-const card = 'bg-white rounded-xl border border-[#EDEDED] shadow-[0_1px_2px_rgba(0,0,0,0.04)]'
+const card = 'bg-bg rounded-xl border border-line shadow-[0_1px_2px_rgba(0,0,0,0.04)]'
 
 function Icon({ children }: { children: ReactNode }) {
   return (
@@ -65,11 +65,11 @@ const ICONS = {
 function StatCard({ icon, label, value, note }: { icon: ReactNode; label: string; value: string | number; note?: string }) {
   return (
     <div className={`${card} p-5 flex items-center gap-4`}>
-      <span className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-[#F1F1F1] text-black">{icon}</span>
+      <span className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-surface text-fg">{icon}</span>
       <div className="min-w-0">
-        <p className="text-sm text-[#666666] truncate">{label}</p>
+        <p className="text-sm text-muted truncate">{label}</p>
         <p className="mt-0.5 text-xl font-black tabular-nums leading-tight">{value}</p>
-        {note && <p className="mt-0.5 text-[11px] text-[#888888] truncate">{note}</p>}
+        {note && <p className="mt-0.5 text-[11px] text-faint truncate">{note}</p>}
       </div>
     </div>
   )
@@ -88,7 +88,7 @@ function BarChart({ buckets }: { buckets: Bucket[] }) {
     <div className="mt-4" role="img" aria-label="Bar chart comparing visits and link clicks over time">
       <div className="flex">
         {/* y axis */}
-        <div className="relative w-10 flex-shrink-0 h-64 text-[11px] text-[#777777] tabular-nums">
+        <div className="relative w-10 flex-shrink-0 h-64 text-[11px] text-muted tabular-nums">
           {ticks.map((t) => (
             <span key={t} className="absolute right-2 -translate-y-1/2" style={{ top: `${100 - (t / top) * 100}%` }}>
               {t}
@@ -98,7 +98,7 @@ function BarChart({ buckets }: { buckets: Bucket[] }) {
         {/* plot */}
         <div className="relative flex-1 h-64">
           {ticks.map((t) => (
-            <div key={t} className="absolute left-0 right-0 border-t border-[#EDEDED]" style={{ top: `${100 - (t / top) * 100}%` }} />
+            <div key={t} className="absolute left-0 right-0 border-t border-line" style={{ top: `${100 - (t / top) * 100}%` }} />
           ))}
           <div className="absolute inset-0 flex items-end justify-around px-2">
             {buckets.map((b) => (
@@ -112,13 +112,13 @@ function BarChart({ buckets }: { buckets: Bucket[] }) {
                       {bar.v}
                     </span>
                     <div
-                      className="w-full border border-black"
+                      className="w-full border border-fg"
                       style={{
                         height: pct(bar.v),
                         minHeight: bar.v > 0 ? 2 : 0,
                         background: bar.hatched
-                          ? 'repeating-linear-gradient(45deg, rgba(0,0,0,0.55) 0 1px, transparent 1px 5px)'
-                          : '#000',
+                          ? 'repeating-linear-gradient(45deg, var(--c-fg) 0 1px, transparent 1px 5px)'
+                          : 'var(--c-fg)',
                       }}
                     />
                   </div>
@@ -131,7 +131,7 @@ function BarChart({ buckets }: { buckets: Bucket[] }) {
       <div className="flex pl-10">
         <div className="flex-1 flex justify-around px-2">
           {buckets.map((b) => (
-            <span key={b.label} className="text-[11px] sm:text-xs text-[#666666] text-center whitespace-nowrap">
+            <span key={b.label} className="text-[11px] sm:text-xs text-muted text-center whitespace-nowrap">
               {b.label}
             </span>
           ))}
@@ -237,28 +237,28 @@ export default function AnalyticsPanel({ onOpenInquiries }: { onOpenInquiries: (
   ]
 
   return (
-    <div className="-mx-6 lg:-mx-12 px-6 lg:px-12 py-6 bg-[#F6F6F6]">
+    <div className="-mx-6 lg:-mx-12 px-6 lg:px-12 py-6 bg-surface">
       {/* Toolbar */}
       <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
         <div>
           <h2 className="text-xl font-black tracking-tight">Analytics</h2>
-          <p className="text-xs text-[#666666] mt-0.5">
+          <p className="text-xs text-muted mt-0.5">
             Anonymous counts only. Your own browser is not counted once you have opened Studio in it.
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-3">
-          <label className="flex items-center gap-2 text-xs text-[#555555] cursor-pointer select-none">
-            <input type="checkbox" checked={includeLocal} onChange={(e) => setIncludeLocal(e.target.checked)} className="accent-black" />
+          <label className="flex items-center gap-2 text-xs text-muted cursor-pointer select-none">
+            <input type="checkbox" checked={includeLocal} onChange={(e) => setIncludeLocal(e.target.checked)} className="accent-fg" />
             Include localhost test traffic
           </label>
-          <div className="inline-flex rounded-lg border border-[#DDDDDD] bg-white overflow-hidden" role="group" aria-label="Time range">
+          <div className="inline-flex rounded-lg border border-line bg-bg overflow-hidden" role="group" aria-label="Time range">
             {RANGES.map((d) => (
               <button
                 key={d}
                 onClick={() => setDays(d)}
                 aria-pressed={days === d}
                 className={`px-4 py-2 text-xs font-semibold transition-colors ${
-                  days === d ? 'bg-black text-white' : 'text-[#555555] hover:text-black'
+                  days === d ? 'bg-fg text-bg' : 'text-muted hover:text-fg'
                 }`}
               >
                 {d} days
@@ -269,12 +269,12 @@ export default function AnalyticsPanel({ onOpenInquiries }: { onOpenInquiries: (
       </div>
 
       {error ? (
-        <div className={`${card} border-red-300 bg-red-50 text-red-700 text-sm p-4`}>
+        <div className={`${card} border-red-300 dark:border-red-900 bg-red-50 dark:bg-red-950/40 text-red-700 dark:text-red-400 text-sm p-4`}>
           {error}
           <button onClick={load} className="ml-3 font-bold underline">Retry</button>
         </div>
       ) : loading ? (
-        <p className="text-sm text-[#555555] py-16 text-center">Loading analytics…</p>
+        <p className="text-sm text-muted py-16 text-center">Loading analytics…</p>
       ) : (
         <div className="space-y-5">
           {/* Stat cards + ranked list */}
@@ -313,7 +313,7 @@ export default function AnalyticsPanel({ onOpenInquiries }: { onOpenInquiries: (
                       setShowAll(false)
                     }}
                     className={`px-3 py-1 text-xs font-semibold rounded-full border transition-colors ${
-                      tab === t.id ? 'bg-black text-white border-black' : 'border-[#DDDDDD] text-[#555555] hover:border-black'
+                      tab === t.id ? 'bg-fg text-bg border-fg' : 'border-line text-muted hover:border-fg'
                     }`}
                   >
                     {t.label}
@@ -321,17 +321,17 @@ export default function AnalyticsPanel({ onOpenInquiries }: { onOpenInquiries: (
                 ))}
               </div>
               {shown.length === 0 ? (
-                <p className="mt-6 text-sm text-[#777777]">Nothing recorded for this yet.</p>
+                <p className="mt-6 text-sm text-muted">Nothing recorded for this yet.</p>
               ) : (
                 <ol className="mt-3">
                   {shown.map((r, i) => (
-                    <li key={r.name} className="flex items-center justify-between gap-3 py-3 border-b border-[#E5E5E5] last:border-b-0 text-sm">
+                    <li key={r.name} className="flex items-center justify-between gap-3 py-3 border-b border-line last:border-b-0 text-sm">
                       <span className="min-w-0 truncate">
-                        <span className="text-[#777777] mr-2 tabular-nums">{i + 1}.</span>
+                        <span className="text-muted mr-2 tabular-nums">{i + 1}.</span>
                         {r.name}
                       </span>
                       <span className="font-bold tabular-nums whitespace-nowrap">
-                        {r.hits} <span className="font-normal text-[#777777]">{unit}</span>
+                        {r.hits} <span className="font-normal text-muted">{unit}</span>
                       </span>
                     </li>
                   ))}
@@ -345,18 +345,18 @@ export default function AnalyticsPanel({ onOpenInquiries }: { onOpenInquiries: (
             <div className="flex flex-wrap items-start justify-between gap-3">
               <div>
                 <h3 className="text-lg font-black leading-snug">Visits and link clicks</h3>
-                <p className="text-sm text-[#666666]">
+                <p className="text-sm text-muted">
                   {days === 7 ? 'Day by day' : `In ${data.buckets.length} periods`}, last {days} days
                 </p>
               </div>
               <div className="flex items-center gap-5 text-sm">
                 <span className="inline-flex items-center gap-2">
-                  <span className="h-4 w-4 bg-black border border-black" aria-hidden="true" /> Visits
+                  <span className="h-4 w-4 bg-fg border border-fg" aria-hidden="true" /> Visits
                 </span>
                 <span className="inline-flex items-center gap-2">
                   <span
-                    className="h-4 w-4 border border-black"
-                    style={{ background: 'repeating-linear-gradient(45deg, rgba(0,0,0,0.55) 0 1px, transparent 1px 4px)' }}
+                    className="h-4 w-4 border border-fg"
+                    style={{ background: 'repeating-linear-gradient(45deg, var(--c-fg) 0 1px, transparent 1px 4px)' }}
                     aria-hidden="true"
                   />{' '}
                   Link clicks
@@ -370,14 +370,14 @@ export default function AnalyticsPanel({ onOpenInquiries }: { onOpenInquiries: (
           <div className="grid md:grid-cols-3 gap-5">
             <div className={`${card} p-5`}>
               <h3 className="text-base font-black">Live websites visited</h3>
-              <p className="text-xs text-[#777777]">Clicks on “Visit live website” from a project</p>
+              <p className="text-xs text-muted">Clicks on “Visit live website” from a project</p>
               {data.liveVisits.length === 0 ? (
-                <p className="mt-4 text-sm text-[#777777]">No clicks yet.</p>
+                <p className="mt-4 text-sm text-muted">No clicks yet.</p>
               ) : (
                 <ol className="mt-3">
                   {data.liveVisits.slice(0, 5).map((r, i) => (
-                    <li key={r.name} className="flex justify-between gap-3 py-2.5 border-b border-[#E5E5E5] last:border-b-0 text-sm">
-                      <span className="truncate"><span className="text-[#777777] mr-2">{i + 1}.</span>{r.name}</span>
+                    <li key={r.name} className="flex justify-between gap-3 py-2.5 border-b border-line last:border-b-0 text-sm">
+                      <span className="truncate"><span className="text-muted mr-2">{i + 1}.</span>{r.name}</span>
                       <span className="font-bold tabular-nums">{r.hits}</span>
                     </li>
                   ))}
@@ -390,15 +390,15 @@ export default function AnalyticsPanel({ onOpenInquiries }: { onOpenInquiries: (
               <div className="mt-3 grid grid-cols-3 gap-4 text-center">
                 <div>
                   <p className="text-3xl font-black tabular-nums">{data.messages}</p>
-                  <p className="text-xs text-[#777777] mt-1">Messages in {days} days</p>
+                  <p className="text-xs text-muted mt-1">Messages in {days} days</p>
                 </div>
                 <div>
                   <p className="text-3xl font-black tabular-nums">{data.delivered}</p>
-                  <p className="text-xs text-[#777777] mt-1">Reached your n8n workflow</p>
+                  <p className="text-xs text-muted mt-1">Reached your n8n workflow</p>
                 </div>
                 <div>
                   <p className="text-3xl font-black tabular-nums">{failed}</p>
-                  <p className="text-xs text-[#777777] mt-1">Not delivered (saved safely)</p>
+                  <p className="text-xs text-muted mt-1">Not delivered (saved safely)</p>
                 </div>
               </div>
               <button onClick={onOpenInquiries} className="mt-4 text-sm font-semibold underline underline-offset-2">

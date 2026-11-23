@@ -21,12 +21,9 @@ import StudioLogin from './studio/StudioLogin'
 import StudioDashboard from './studio/StudioDashboard'
 import RequireOwnerAuth from './studio/RequireOwnerAuth'
 
-/** Studio screens are light-only: lock the theme while mounted, restore on leave. */
+/** Studio screens: keep out of search engines and don't count the owner's own visits. Theme follows the system or the Light/Dark toggle. */
 function LightOnly({ children }: { children: ReactNode }) {
   useEffect(() => {
-    const root = document.documentElement
-    const previous = root.dataset.theme
-    root.dataset.theme = 'light'
     const robots = document.createElement('meta')
     robots.name = 'robots'
     robots.content = 'noindex, nofollow'
@@ -38,7 +35,6 @@ function LightOnly({ children }: { children: ReactNode }) {
     }
     return () => {
       robots.remove()
-      if (previous) root.dataset.theme = previous
     }
   }, [])
   return <>{children}</>

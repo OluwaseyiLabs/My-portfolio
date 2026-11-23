@@ -4,7 +4,7 @@ import { fetchSiteContent, saveSiteContent, uploadImageFile } from '../lib/supab
 import { validateImageFile } from '../lib/imageOptimization'
 import { useContent } from '../context/ContentContext'
 
-const inputCls = 'w-full border border-[#D5D5D5] focus:border-black px-3 py-2 text-sm outline-none transition-colors bg-white'
+const inputCls = 'w-full border border-line-strong focus:border-fg px-3 py-2 text-sm outline-none transition-colors bg-bg'
 
 export default function SiteContentManager() {
   const { refresh } = useContent()
@@ -91,11 +91,11 @@ export default function SiteContentManager() {
 
   return (
     <div>
-      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-6 pb-4 border-b border-black">
+      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-6 pb-4 border-b border-fg">
         <div>
-          <p className="text-xs font-semibold tracking-[0.2em] uppercase text-[#555555] mb-1">Site Content</p>
+          <p className="text-xs font-semibold tracking-[0.2em] uppercase text-muted mb-1">Site Content</p>
           <h2 className="text-2xl font-black tracking-tight">Edit the text on your website</h2>
-          <p className="text-xs text-[#666666] mt-1 max-w-xl leading-relaxed">
+          <p className="text-xs text-muted mt-1 max-w-xl leading-relaxed">
             Change any heading, paragraph, button or link. Projects, skills and videos have their own tabs.
             &ldquo;Reset&rdquo; puts a field back to its original text.
           </p>
@@ -105,13 +105,13 @@ export default function SiteContentManager() {
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           placeholder="Search text…"
-          className="border border-[#D5D5D5] focus:border-black px-3 py-2 text-sm outline-none w-full sm:w-64"
+          className="border border-line-strong focus:border-fg px-3 py-2 text-sm outline-none w-full sm:w-64"
           aria-label="Search site text"
         />
       </div>
 
       {loading ? (
-        <p className="text-sm text-[#555555] py-10 text-center">Loading…</p>
+        <p className="text-sm text-muted py-10 text-center">Loading…</p>
       ) : (
         <div className="space-y-4 pb-28">
           {CONTENT_GROUPS.map((group, gi) => {
@@ -119,23 +119,23 @@ export default function SiteContentManager() {
             if (fields.length === 0) return null
             const editedHere = group.fields.filter((fld) => (values[fld.key] ?? fld.default) !== fld.default).length
             return (
-              <details key={group.id} open={gi === 0 || !!q} className="border border-[#E5E5E5] bg-white group">
+              <details key={group.id} open={gi === 0 || !!q} className="border border-line bg-bg group">
                 <summary className="cursor-pointer select-none px-5 py-4 flex items-center justify-between gap-3 list-none">
                   <span>
                     <span className="block text-sm font-black uppercase tracking-wider">{group.title}</span>
                     {group.description && (
-                      <span className="block text-[11px] text-[#666666] mt-0.5 font-normal normal-case tracking-normal">
+                      <span className="block text-[11px] text-muted mt-0.5 font-normal normal-case tracking-normal">
                         {group.description}
                       </span>
                     )}
                   </span>
-                  <span className="flex items-center gap-3 flex-shrink-0 text-[11px] text-[#777777]">
-                    {editedHere > 0 && <span className="px-2 py-0.5 bg-black text-white font-bold">{editedHere} edited</span>}
+                  <span className="flex items-center gap-3 flex-shrink-0 text-[11px] text-muted">
+                    {editedHere > 0 && <span className="px-2 py-0.5 bg-fg text-bg font-bold">{editedHere} edited</span>}
                     <span aria-hidden="true" className="group-open:rotate-180 transition-transform">▾</span>
                   </span>
                 </summary>
 
-                <div className="px-5 pb-5 pt-1 grid gap-4 border-t border-[#E5E5E5]">
+                <div className="px-5 pb-5 pt-1 grid gap-4 border-t border-line">
                   {fields.map((fld) => {
                     const value = values[fld.key] ?? fld.default
                     const edited = value !== fld.default
@@ -144,15 +144,15 @@ export default function SiteContentManager() {
                     return (
                       <div key={fld.key} className="pt-3">
                         <div className="flex items-center justify-between gap-3 mb-1">
-                          <label htmlFor={id} className="text-[11px] font-bold uppercase tracking-wider text-black">
+                          <label htmlFor={id} className="text-[11px] font-bold uppercase tracking-wider text-fg">
                             {fld.label}
-                            {edited && <span className="ml-2 text-[10px] text-[#777777] normal-case tracking-normal">edited</span>}
+                            {edited && <span className="ml-2 text-[10px] text-muted normal-case tracking-normal">edited</span>}
                           </label>
                           {edited && (
                             <button
                               type="button"
                               onClick={() => setValues((v) => ({ ...v, [fld.key]: fld.default }))}
-                              className="text-[11px] font-bold underline text-[#555555] hover:text-black"
+                              className="text-[11px] font-bold underline text-muted hover:text-fg"
                             >
                               Reset
                             </button>
@@ -160,10 +160,10 @@ export default function SiteContentManager() {
                         </div>
                         {fld.type === 'image' ? (
                           <div className="flex items-center gap-4">
-                            <span className="flex h-16 w-16 items-center justify-center overflow-hidden rounded-xl border border-[#E5E5E5] bg-[#F5F5F5] text-xs text-[#888888]">
+                            <span className="flex h-16 w-16 items-center justify-center overflow-hidden rounded-xl border border-line bg-surface text-xs text-faint">
                               {value ? <img src={value} alt="" className="h-full w-full object-cover" /> : 'None'}
                             </span>
-                            <label className="cursor-pointer px-3 py-2 border border-black text-xs font-bold hover:bg-black hover:text-white transition-colors">
+                            <label className="cursor-pointer px-3 py-2 border border-fg text-xs font-bold hover:bg-fg hover:text-bg transition-colors">
                               {uploadingKey === fld.key ? 'Uploading…' : value ? 'Replace photo' : 'Upload photo'}
                               <input
                                 id={id}
@@ -180,7 +180,7 @@ export default function SiteContentManager() {
                               <button
                                 type="button"
                                 onClick={() => setValues((v) => ({ ...v, [fld.key]: '' }))}
-                                className="text-xs font-bold underline text-red-600"
+                                className="text-xs font-bold underline text-red-600 dark:text-red-400"
                               >
                                 Remove
                               </button>
@@ -203,7 +203,7 @@ export default function SiteContentManager() {
                             className={inputCls}
                           />
                         )}
-                        {fld.hint && <p className="text-[11px] text-[#777777] mt-1">{fld.hint}</p>}
+                        {fld.hint && <p className="text-[11px] text-muted mt-1">{fld.hint}</p>}
                       </div>
                     )
                   })}
@@ -215,11 +215,11 @@ export default function SiteContentManager() {
       )}
 
       {/* Sticky save bar */}
-      <div className="fixed bottom-0 left-0 right-0 z-40 bg-white border-t border-[#E5E5E5]">
+      <div className="fixed bottom-0 left-0 right-0 z-40 bg-bg border-t border-line">
         <div className="max-w-7xl mx-auto px-6 lg:px-12 py-3 flex flex-wrap items-center justify-between gap-3">
           <p
             role="status"
-            className={`text-xs font-semibold ${message?.kind === 'error' ? 'text-red-700' : 'text-[#555555]'}`}
+            className={`text-xs font-semibold ${message?.kind === 'error' ? 'text-red-700 dark:text-red-400' : 'text-muted'}`}
           >
             {message ? message.text : dirtyCount > 0 ? `${dirtyCount} unsaved ${dirtyCount === 1 ? 'change' : 'changes'}` : 'No unsaved changes'}
           </p>
@@ -231,7 +231,7 @@ export default function SiteContentManager() {
                 setValues({ ...DEFAULTS, ...saved })
                 setMessage(null)
               }}
-              className="px-4 py-2 border border-[#CCCCCC] text-xs font-bold disabled:opacity-40"
+              className="px-4 py-2 border border-line-strong text-xs font-bold disabled:opacity-40"
             >
               Discard
             </button>
@@ -239,7 +239,7 @@ export default function SiteContentManager() {
               type="button"
               disabled={dirtyCount === 0 || saving}
               onClick={handleSave}
-              className="px-5 py-2 bg-black text-white text-xs font-bold border border-black hover:bg-white hover:text-black transition-colors disabled:opacity-40"
+              className="px-5 py-2 bg-fg text-bg text-xs font-bold border border-fg hover:bg-bg hover:text-fg transition-colors disabled:opacity-40"
             >
               {saving ? 'Saving…' : 'Save changes'}
             </button>

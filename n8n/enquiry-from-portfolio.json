@@ -238,7 +238,7 @@
           "name": "Gmail account 2"
         }
       },
-      "onError": "continueRegularOutput"
+      "onError": "continueErrorOutput"
     },
     {
       "parameters": {
@@ -307,6 +307,96 @@
         1568,
         0
       ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://YOUR-PROJECT-REF.supabase.co/rest/v1/rpc/portfolio_log_workflow_error",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ p_key: 'REPLACE_WITH_ERROR_INGEST_KEY', p_workflow: 'Enquiry from Portfolio', p_node: 'Claim inquiry', p_message: String($json.error?.message ?? $json.error ?? 'Unknown error'), p_details: JSON.stringify($json.error ?? {}).slice(0, 3000), p_execution_id: String($execution.id) }) }}",
+        "options": {
+          "timeout": 8000
+        }
+      },
+      "id": "af9bb44d-84f0-40ef-a0d5-f9c15713b9c8",
+      "name": "Log claim error",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        900,
+        100
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "REPLACE_WITH_SUPABASE_APIKEY_CREDENTIAL",
+          "name": "Supabase apikey header"
+        }
+      },
+      "onError": "continueRegularOutput",
+      "notes": "Reports this failure to the Studio Errors dashboard. Set the URL to your Supabase project and replace REPLACE_WITH_ERROR_INGEST_KEY with the ingest key (never commit the real key)."
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://YOUR-PROJECT-REF.supabase.co/rest/v1/rpc/portfolio_log_workflow_error",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ p_key: 'REPLACE_WITH_ERROR_INGEST_KEY', p_workflow: 'Enquiry from Portfolio', p_node: 'Email to Oluwaseyi', p_message: String($json.error?.message ?? $json.error ?? 'Unknown error'), p_details: JSON.stringify($json.error ?? {}).slice(0, 3000), p_execution_id: String($execution.id) }) }}",
+        "options": {
+          "timeout": 8000
+        }
+      },
+      "id": "8c51a29d-e1e7-4c72-8a3b-326aac0008bd",
+      "name": "Log email error",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1344,
+        0
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "REPLACE_WITH_SUPABASE_APIKEY_CREDENTIAL",
+          "name": "Supabase apikey header"
+        }
+      },
+      "onError": "continueRegularOutput",
+      "notes": "Reports this failure to the Studio Errors dashboard. Set the URL to your Supabase project and replace REPLACE_WITH_ERROR_INGEST_KEY with the ingest key (never commit the real key)."
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://YOUR-PROJECT-REF.supabase.co/rest/v1/rpc/portfolio_log_workflow_error",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ p_key: 'REPLACE_WITH_ERROR_INGEST_KEY', p_workflow: 'Enquiry from Portfolio', p_node: 'Confirmation to client', p_message: String($json.error?.message ?? $json.error ?? 'Unknown error'), p_details: JSON.stringify($json.error ?? {}).slice(0, 3000), p_execution_id: String($execution.id) }) }}",
+        "options": {
+          "timeout": 8000
+        }
+      },
+      "id": "cac3b698-7ad2-4a60-b2f7-7cbfaf4aaf87",
+      "name": "Log confirmation error",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1568,
+        -100
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "REPLACE_WITH_SUPABASE_APIKEY_CREDENTIAL",
+          "name": "Supabase apikey header"
+        }
+      },
+      "onError": "continueRegularOutput",
+      "notes": "Reports this failure to the Studio Errors dashboard. Set the URL to your Supabase project and replace REPLACE_WITH_ERROR_INGEST_KEY with the ingest key (never commit the real key)."
     }
   ],
   "connections": {
@@ -361,7 +451,7 @@
         ],
         [
           {
-            "node": "Reply failed",
+            "node": "Log claim error",
             "type": "main",
             "index": 0
           }
@@ -408,7 +498,7 @@
         ],
         [
           {
-            "node": "Reply failed",
+            "node": "Log email error",
             "type": "main",
             "index": 0
           }
@@ -416,6 +506,46 @@
       ]
     },
     "Confirmation to client": {
+      "main": [
+        [
+          {
+            "node": "Reply OK",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Log confirmation error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Log claim error": {
+      "main": [
+        [
+          {
+            "node": "Reply failed",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Log email error": {
+      "main": [
+        [
+          {
+            "node": "Reply failed",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Log confirmation error": {
       "main": [
         [
           {

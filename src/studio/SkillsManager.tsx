@@ -74,36 +74,36 @@ export default function SkillsManager({ onCountChange }: { onCountChange?: (n: n
 
   return (
     <div>
-      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-6 pb-4 border-b border-black">
+      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-6 pb-4 border-b border-fg">
         <div>
-          <p className="text-xs font-semibold tracking-[0.2em] uppercase text-[#555555] mb-1">Skills</p>
+          <p className="text-xs font-semibold tracking-[0.2em] uppercase text-muted mb-1">Skills</p>
           <h2 className="text-2xl font-black tracking-tight">Tools shown on your website</h2>
         </div>
         <button
           onClick={() => setCreating(true)}
-          className="px-4 py-2 bg-black text-white text-xs font-bold border border-black hover:bg-white hover:text-black transition-colors"
+          className="px-4 py-2 bg-fg text-bg text-xs font-bold border border-fg hover:bg-bg hover:text-fg transition-colors"
         >
           + Add Skill
         </button>
       </div>
 
       {error ? (
-        <div className="border border-red-600 bg-red-50 text-red-700 text-sm p-4">
+        <div className="border border-red-600 bg-red-50 dark:bg-red-950/40 text-red-700 dark:text-red-400 text-sm p-4">
           {error}
           <button onClick={load} className="ml-3 font-bold underline">
             Retry
           </button>
         </div>
       ) : loading ? (
-        <p className="text-sm text-[#555555] py-10 text-center">Loading skills…</p>
+        <p className="text-sm text-muted py-10 text-center">Loading skills…</p>
       ) : skills.length === 0 ? (
-        <div className="border border-dashed border-[#CCCCCC] p-10 text-center text-sm text-[#555555]">
+        <div className="border border-dashed border-line-strong p-10 text-center text-sm text-muted">
           No skills yet. The public site shows its built-in defaults until you add your first one here.
         </div>
       ) : (
-        <div className="border border-[#E5E5E5] overflow-x-auto">
+        <div className="border border-line overflow-x-auto">
           <table className="w-full text-sm text-left">
-            <thead className="bg-[#F5F5F5] text-xs uppercase tracking-wider text-[#555555]">
+            <thead className="bg-surface text-xs uppercase tracking-wider text-muted">
               <tr>
                 <th className="px-4 py-3">Icon</th>
                 <th className="px-4 py-3">Name</th>
@@ -114,13 +114,13 @@ export default function SkillsManager({ onCountChange }: { onCountChange?: (n: n
             </thead>
             <tbody>
               {skills.map((skill, i) => (
-                <tr key={skill.id} className="border-t border-[#E5E5E5]">
+                <tr key={skill.id} className="border-t border-line">
                   <td className="px-4 py-3">
-                    <span className="flex h-10 w-10 items-center justify-center rounded-lg border border-[#E5E5E5] bg-[#F5F5F5]">
+                    <span className="flex h-10 w-10 items-center justify-center rounded-lg border border-line bg-surface">
                       {skill.icon_url ? (
                         <img src={skill.icon_url} alt="" className="h-6 w-6 object-contain" />
                       ) : (
-                        <span className="text-xs text-[#888888]">{skill.name.charAt(0).toUpperCase()}</span>
+                        <span className="text-xs text-faint">{skill.name.charAt(0).toUpperCase()}</span>
                       )}
                     </span>
                   </td>
@@ -137,16 +137,16 @@ export default function SkillsManager({ onCountChange }: { onCountChange?: (n: n
                     >
                       <span
                         className={`relative inline-block h-6 w-11 rounded-full border transition-colors duration-200 ${
-                          skill.visible ? 'bg-black border-black' : 'bg-[#E5E5E5] border-[#CCCCCC]'
+                          skill.visible ? 'bg-fg border-fg' : 'bg-line border-line-strong'
                         }`}
                       >
                         <span
-                          className={`absolute top-0.5 left-0.5 h-5 w-5 rounded-full bg-white shadow transition-transform duration-200 ${
+                          className={`absolute top-0.5 left-0.5 h-5 w-5 rounded-full bg-bg shadow transition-transform duration-200 ${
                             skill.visible ? 'translate-x-5' : 'translate-x-0'
                           }`}
                         />
                       </span>
-                      <span className="text-[11px] font-bold uppercase tracking-wider text-[#555555] w-10 text-left">
+                      <span className="text-[11px] font-bold uppercase tracking-wider text-muted w-10 text-left">
                         {skill.visible ? 'On' : 'Off'}
                       </span>
                     </button>
@@ -157,7 +157,7 @@ export default function SkillsManager({ onCountChange }: { onCountChange?: (n: n
                         onClick={() => move(i, -1)}
                         disabled={busy || i === 0}
                         aria-label={`Move ${skill.name} up`}
-                        className="w-7 h-7 border border-[#CCCCCC] disabled:opacity-30 hover:border-black"
+                        className="w-7 h-7 border border-line-strong disabled:opacity-30 hover:border-fg"
                       >
                         ↑
                       </button>
@@ -165,7 +165,7 @@ export default function SkillsManager({ onCountChange }: { onCountChange?: (n: n
                         onClick={() => move(i, 1)}
                         disabled={busy || i === skills.length - 1}
                         aria-label={`Move ${skill.name} down`}
-                        className="w-7 h-7 border border-[#CCCCCC] disabled:opacity-30 hover:border-black"
+                        className="w-7 h-7 border border-line-strong disabled:opacity-30 hover:border-fg"
                       >
                         ↓
                       </button>
@@ -176,7 +176,7 @@ export default function SkillsManager({ onCountChange }: { onCountChange?: (n: n
                       <button onClick={() => setEditing(skill)} className="underline">
                         Edit
                       </button>
-                      <button onClick={() => setDeleting(skill)} className="text-red-600 underline">
+                      <button onClick={() => setDeleting(skill)} className="text-red-600 dark:text-red-400 underline">
                         Delete
                       </button>
                     </div>
@@ -206,13 +206,13 @@ export default function SkillsManager({ onCountChange }: { onCountChange?: (n: n
 
       {deleting && (
         <div className="fixed inset-0 z-[160] bg-black/60 flex items-center justify-center p-4" role="dialog" aria-modal="true">
-          <div className="bg-white border-2 border-black max-w-sm w-full p-6 text-black shadow-2xl">
+          <div className="bg-bg border-2 border-fg max-w-sm w-full p-6 text-fg shadow-2xl">
             <h3 className="text-base font-black uppercase tracking-wider mb-2">Delete skill</h3>
-            <p className="text-xs text-[#555555] mb-6 leading-relaxed">
+            <p className="text-xs text-muted mb-6 leading-relaxed">
               Delete “{deleting.name}” and its uploaded icon? This cannot be undone.
             </p>
             <div className="flex items-center justify-end gap-3">
-              <button onClick={() => setDeleting(null)} className="px-4 py-2 border border-[#CCCCCC] text-xs font-bold">
+              <button onClick={() => setDeleting(null)} className="px-4 py-2 border border-line-strong text-xs font-bold">
                 Cancel
               </button>
               <button

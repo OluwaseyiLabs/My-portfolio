@@ -1,0 +1,63 @@
+{
+  "name": "Error reporter (Studio Errors dashboard)",
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "tags": [],
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "6ac03063-1729-4b52-9368-bd03fcfce1e6",
+      "name": "Error Trigger",
+      "type": "n8n-nodes-base.errorTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://YOUR-PROJECT-REF.supabase.co/rest/v1/rpc/portfolio_log_workflow_error",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ p_key: 'REPLACE_WITH_ERROR_INGEST_KEY', p_workflow: $json.workflow?.name ?? 'Unknown workflow', p_node: $json.execution?.lastNodeExecuted ?? null, p_message: $json.execution?.error?.message ?? 'Unknown error', p_details: String($json.execution?.error?.description ?? '') + '\\n' + String($json.execution?.error?.stack ?? '').slice(0, 2500), p_execution_id: String($json.execution?.id ?? ''), p_execution_url: $json.execution?.url ?? null }) }}",
+        "options": {
+          "timeout": 8000
+        }
+      },
+      "id": "6bff9aac-df9e-4db8-b333-e709fa659be2",
+      "name": "Log to Studio",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        260,
+        0
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "REPLACE_WITH_SUPABASE_APIKEY_CREDENTIAL",
+          "name": "Supabase apikey header"
+        }
+      },
+      "notes": "Set the URL to your Supabase project and replace REPLACE_WITH_ERROR_INGEST_KEY with the ingest key (never commit the real key)."
+    }
+  ],
+  "connections": {
+    "Error Trigger": {
+      "main": [
+        [
+          {
+            "node": "Log to Studio",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
+}

@@ -319,3 +319,12 @@
 }
 .menu-in { animation: menu-in 0.22s cubic-bezier(0.22, 1, 0.36, 1) both; transform-origin: top center; }
 @media (prefers-reduced-motion: reduce) { .menu-in { animation: none; } }
+
+/* Studio on phones: 16px form text stops iOS Safari zooming the page when a field is focused */
+@media (max-width: 767px) {
+  .studio-root input:not([type='checkbox']):not([type='radio']):not([type='range']):not([type='file']),
+  .studio-root select,
+  .studio-root textarea {
+    font-size: 16px;
+  }
+}
